@@ -1,1 +1,4 @@
 secret_json.json
+node_modules/
+dist/
+*.log
