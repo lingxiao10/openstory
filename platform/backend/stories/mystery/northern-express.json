@@ -1,0 +1,812 @@
+{
+  "id": "northern",
+  "title": { "zh": "华北特快疑云", "en": "The Northern Express" },
+  "description": {
+    "zh": "一列被大雪困住的火车。一具无人见证的尸体。七个各怀秘密的乘客。",
+    "en": "A train trapped by a blizzard. A body with no witnesses. Seven passengers, each hiding a secret."
+  },
+  "type": "mystery",
+  "statDefs": {},
+  "itemDefs": {},
+  "cards": [
+    {
+      "id": 0,
+      "type": "story",
+      "act": { "zh": "第一幕  上车", "en": "Act I  Boarding" },
+      "text": {
+        "zh": "1937年冬天。「华北特快」从上海出发，目的地北京。",
+        "en": "Winter, 1937. The Northern Express departs Shanghai, bound for Beijing."
+      }
+    },
+    {
+      "id": 1,
+      "type": "story",
+      "text": {
+        "zh": "外面下着大雪，车里暖烘烘的。",
+        "en": "Snow falls thick outside. Inside, the carriages are warm."
+      }
+    },
+    {
+      "id": 2,
+      "type": "story",
+      "text": {
+        "zh": "你叫陈问渠，退休刑警，这趟本来只是回家探亲。",
+        "en": "Your name is Chen Wenqu — a retired detective, travelling home to see family. Nothing more."
+      }
+    },
+    {
+      "id": 3,
+      "type": "story",
+      "text": {
+        "zh": "七号车厢，七个陌生人。",
+        "en": "Car Seven. Seven strangers."
+      }
+    },
+    {
+      "id": 4,
+      "type": "story",
+      "text": {
+        "zh": "餐车里，钻石商人柳明辉正拍着胸口炫耀。",
+        "en": "In the dining car, the diamond merchant Liu Minghui holds court, thumping his chest with pride."
+      }
+    },
+    {
+      "id": 5,
+      "type": "story",
+      "text": {
+        "zh": "「这颗血月钻石，我从南非带回来的，值老钱了。」",
+        "en": "\"This Blood Moon diamond — I brought it back from South Africa myself. Worth a fortune.\""
+      }
+    },
+    {
+      "id": 6,
+      "type": "story",
+      "text": {
+        "zh": "旁边的大商人何大庆笑得满脸油光，跟他碰杯。",
+        "en": "The wealthy merchant He Daqing grins, his face gleaming, and raises his glass."
+      }
+    },
+    {
+      "id": 7,
+      "type": "story",
+      "text": {
+        "zh": "角落里有个女人叫白芷芬，自己喝茶，一句话都不说。",
+        "en": "In the corner, a woman named Bai Zhifen drinks her tea alone and says nothing at all."
+      }
+    },
+    {
+      "id": 8,
+      "type": "story",
+      "text": {
+        "zh": "英国人马修斯用破中文搭讪女演员钱露，钱露只是礼貌地笑笑。",
+        "en": "The Englishman Matthews attempts conversation with the actress Qian Lu in halting Mandarin. She smiles politely and says little."
+      }
+    },
+    {
+      "id": 9,
+      "type": "story",
+      "text": {
+        "zh": "贺医生一直在看书，但柳明辉提到「血月」那一下，他的手抖了一下。",
+        "en": "Dr. He has been reading all evening — but the moment Liu Minghui mentions the Blood Moon, the doctor's hand gives a small tremor."
+      }
+    },
+    {
+      "id": 10,
+      "type": "story",
+      "text": {
+        "zh": "晚上11点，大家各回各包厢。",
+        "en": "At eleven o'clock, everyone retires to their compartments."
+      }
+    },
+    {
+      "id": 11,
+      "type": "story",
+      "text": {
+        "zh": "凌晨2点，走廊里传来一声压低的呼喊。",
+        "en": "At two in the morning, a muffled cry rises from the corridor."
+      }
+    },
+    {
+      "id": 12,
+      "type": "story",
+      "text": {
+        "zh": "是列车员小陈，脸白得像纸。",
+        "en": "It is the young attendant, Xiao Chen — his face drained white as a sheet."
+      }
+    },
+    {
+      "id": 13,
+      "type": "story",
+      "text": {
+        "zh": "「七号包厢柳先生死了。」",
+        "en": "\"Mr. Liu in Compartment Seven — he's dead.\""
+      }
+    },
+    {
+      "id": 14,
+      "type": "choice",
+      "text": {
+        "zh": "你站在包厢门口，现场没人动过。第一步怎么做？",
+        "en": "You stand at the compartment door. The scene is untouched. What is your first move?"
+      },
+      "optA": {
+        "zh": "先翻柳明辉的皮质公文包",
+        "en": "Search Liu Minghui's leather briefcase"
+      },
+      "optB": {
+        "zh": "叫贺医生进来，先确认死亡时间",
+        "en": "Call Dr. He in to establish the time of death"
+      },
+      "correct": "B",
+      "penalty": {
+        "zh": "公文包上了锁，什么都没查到。更糟的是，你翻现场的动作被人看见了。线索断了，重来。",
+        "en": "The briefcase is locked. Worse, someone sees you rifling through the scene. The lead goes cold. Start over."
+      },
+      "hint": {
+        "zh": "死亡时间是推理的起点，其他都往后排。",
+        "en": "Time of death is the foundation of any investigation. Everything else comes after."
+      }
+    },
+    {
+      "id": 15,
+      "type": "story",
+      "text": {
+        "zh": "贺医生蹲下来检查了一圈，站起来说",
+        "en": "Dr. He crouches down, examines the body carefully, then rises."
+      }
+    },
+    {
+      "id": 16,
+      "type": "story",
+      "text": {
+        "zh": "「死亡时间在午夜12点到凌晨1点之间。」",
+        "en": "\"Time of death: somewhere between midnight and one in the morning.\""
+      }
+    },
+    {
+      "id": 17,
+      "type": "story",
+      "text": {
+        "zh": "「没有外伤。但枕头上有个压痕，位置不对劲。」",
+        "en": "\"No external wounds. But there is an impression on the pillow — in the wrong place entirely.\""
+      }
+    },
+    {
+      "id": 18,
+      "type": "story",
+      "text": {
+        "zh": "外面雪越下越大，前方铁轨被堵死了火车停了。",
+        "en": "Outside, the snow intensifies. The tracks ahead are blocked. The train has stopped."
+      }
+    },
+    {
+      "id": 19,
+      "type": "story",
+      "text": {
+        "zh": "跑不了，也叫不到人。就我们这几个。",
+        "en": "No one can flee. No help can be summoned. It is just us."
+      }
+    },
+    {
+      "id": 20,
+      "type": "story",
+      "text": {
+        "zh": "你挨个问了一遍，所有人都说自己在睡觉。",
+        "en": "You question each of them in turn. Everyone claims to have been asleep."
+      }
+    },
+    {
+      "id": 21,
+      "type": "story",
+      "text": {
+        "zh": "小陈说，他最后见到柳先生是晚上11点，给他送了杯茶。",
+        "en": "Xiao Chen says the last time he saw Mr. Liu was at eleven o'clock, when he delivered a cup of tea."
+      }
+    },
+    {
+      "id": 22,
+      "type": "choice",
+      "text": {
+        "zh": "小陈答完想走，你发现他从头到尾左手都插在口袋里没拿出来过。",
+        "en": "Xiao Chen answers and moves to leave. You notice he has kept his left hand in his pocket the entire time, never once taking it out."
+      },
+      "optA": {
+        "zh": "放他走，去问别人",
+        "en": "Let him go and question someone else"
+      },
+      "optB": {
+        "zh": "拦住他，问那杯茶是谁让他送的",
+        "en": "Stop him and ask who told him to deliver that tea"
+      },
+      "correct": "B",
+      "penalty": {
+        "zh": "后来你在茶杯底发现了白色沉淀，再去找小陈，他已经改口了。线索就这么断了。",
+        "en": "Later you find a white residue at the bottom of the teacup. By then Xiao Chen has changed his story. The lead is gone."
+      },
+      "hint": {
+        "zh": "一直藏着一只手的人，心里有事。",
+        "en": "A man who keeps one hand hidden throughout has something to hide."
+      }
+    },
+    {
+      "id": 23,
+      "type": "story",
+      "text": {
+        "zh": "小陈停下来，额头开始冒汗。",
+        "en": "Xiao Chen stops. Sweat breaks out on his forehead."
+      }
+    },
+    {
+      "id": 24,
+      "type": "story",
+      "text": {
+        "zh": "「是白太太说的，她说柳先生爱喝茉莉花茶，让我帮忙送过去。」",
+        "en": "\"It was Madame Bai. She said Mr. Liu was fond of jasmine tea, and asked me to bring him a cup.\""
+      }
+    },
+    {
+      "id": 25,
+      "type": "story",
+      "text": {
+        "zh": "白芷芬凭什么知道柳明辉喜欢喝什么茶？",
+        "en": "How would Bai Zhifen know what tea Liu Minghui liked?"
+      }
+    },
+    {
+      "id": 26,
+      "type": "story",
+      "text": {
+        "zh": "你把这个记下来了。",
+        "en": "You make a note of it."
+      }
+    },
+    {
+      "id": 27,
+      "type": "story",
+      "act": { "zh": "第二幕  盘问", "en": "Act II  Interrogation" },
+      "text": {
+        "zh": "你去找白芷芬，她正蹲在地上捡珍珠，项链断了。",
+        "en": "You go to find Bai Zhifen. She is kneeling on the floor, picking up pearls — her necklace has snapped."
+      }
+    },
+    {
+      "id": 28,
+      "type": "story",
+      "text": {
+        "zh": "「昨晚睡觉时扯断的，我睡了一整夜，什么都不知道。」",
+        "en": "\"It broke while I was sleeping last night. I slept the whole night through. I know nothing.\""
+      }
+    },
+    {
+      "id": 29,
+      "type": "choice",
+      "text": {
+        "zh": "你看了眼地板珍珠全堆在靠走廊那边，不在床边。",
+        "en": "You glance at the floor. The pearls are all gathered near the corridor side of the compartment — not beside the bed."
+      },
+      "optA": {
+        "zh": "不管，直接问她认不认识柳明辉",
+        "en": "Let it go and ask directly whether she knew Liu Minghui"
+      },
+      "optB": {
+        "zh": "指出来：睡觉时断的话，珍珠应该在床边",
+        "en": "Point it out: if the necklace broke while she was in bed, the pearls should be near the bed"
+      },
+      "correct": "B",
+      "penalty": {
+        "zh": "你没追这个，她很快就想好了另一套说法。等你反应过来，珍珠已经收走了。",
+        "en": "You let it pass. She quickly constructs another explanation. By the time you think to look again, the pearls are gone."
+      },
+      "hint": {
+        "zh": "东西掉在哪，说明人站在哪。",
+        "en": "Where things fall tells you where the person was standing."
+      }
+    },
+    {
+      "id": 30,
+      "type": "story",
+      "text": {
+        "zh": "白芷芬眼神飘了一下，然后恢复平静。",
+        "en": "Bai Zhifen's gaze flickers — then she composes herself."
+      }
+    },
+    {
+      "id": 31,
+      "type": "story",
+      "text": {
+        "zh": "「睡不着，我起来在门边站了一会儿，那时候断的。」她改口了。",
+        "en": "\"I couldn't sleep. I got up and stood by the door for a while — that's when it broke.\" She has changed her story."
+      }
+    },
+    {
+      "id": 32,
+      "type": "story",
+      "text": {
+        "zh": "她改得很快，但眼睛里有什么东西收紧了。",
+        "en": "The revision comes quickly, but something tightens behind her eyes."
+      }
+    },
+    {
+      "id": 33,
+      "type": "story",
+      "text": {
+        "zh": "你注意到她茶杯里漂的，是茉莉花跟柳明辉包厢里一样的茶。",
+        "en": "You notice the tea in her cup: jasmine — the same as the tea found in Liu Minghui's compartment."
+      }
+    },
+    {
+      "id": 34,
+      "type": "story",
+      "text": {
+        "zh": "何大庆正在包厢里骂火车停运，见你来，立刻凑上来。",
+        "en": "He Daqing is in his compartment, cursing the delay. When he sees you, he immediately rushes over."
+      }
+    },
+    {
+      "id": 35,
+      "type": "story",
+      "text": {
+        "zh": "「凶手肯定是那个外国人！我昨晚亲耳听见争吵声，是外国口音！」",
+        "en": "\"The killer is obviously the foreigner! I heard an argument last night with my own ears — a foreign accent!\""
+      }
+    },
+    {
+      "id": 36,
+      "type": "choice",
+      "text": {
+        "zh": "何大庆说得有鼻子有眼的，还学起了外国口音。",
+        "en": "He Daqing tells his story with theatrical conviction, even mimicking the foreign accent."
+      },
+      "optA": {
+        "zh": "先把马修斯当重点嫌疑人查",
+        "en": "Make Matthews the primary suspect and investigate him first"
+      },
+      "optB": {
+        "zh": "追问他：几点听见的？他当时在走廊干嘛？",
+        "en": "Press him: what time did he hear it, and what was he doing in the corridor?"
+      },
+      "correct": "B",
+      "penalty": {
+        "zh": "马修斯确实在走廊，但他是在谈古董生意，有人证。你跑偏了，真凶多争取了时间。",
+        "en": "Matthews was indeed in the corridor, but he was negotiating an antique sale — there is a witness. You have wasted time, and the real killer has gained it."
+      },
+      "hint": {
+        "zh": "爆料爆得太积极的人，自己一般也有事要藏。",
+        "en": "The person most eager to point the finger usually has something to conceal themselves."
+      }
+    },
+    {
+      "id": 37,
+      "type": "story",
+      "text": {
+        "zh": "「大概十一点半吧，我去走廊抽烟。」他说完眼神飘开了。",
+        "en": "\"Around half past eleven. I went to the corridor for a smoke.\" His eyes drift away as he says it."
+      }
+    },
+    {
+      "id": 38,
+      "type": "story",
+      "text": {
+        "zh": "但他桌上没有烟灰缸，手指上也没有烟渍。",
+        "en": "But there is no ashtray on his table, and his fingers bear no trace of tobacco."
+      }
+    },
+    {
+      "id": 39,
+      "type": "story",
+      "text": {
+        "zh": "你记得餐车里他还嫌别人抽烟呛人，扇了好几次手。",
+        "en": "You remember him waving away someone else's smoke in the dining car, complaining it was choking him."
+      }
+    },
+    {
+      "id": 40,
+      "type": "story",
+      "text": {
+        "zh": "何大庆根本不抽烟。那他在走廊干嘛？",
+        "en": "He Daqing doesn't smoke at all. So what was he doing in the corridor?"
+      }
+    },
+    {
+      "id": 41,
+      "type": "story",
+      "text": {
+        "zh": "马修斯在收拾他的古董，神情很稳。",
+        "en": "Matthews is packing away his antiques, his manner calm and unhurried."
+      }
+    },
+    {
+      "id": 42,
+      "type": "story",
+      "text": {
+        "zh": "「昨晚十一点四十五，我去餐车取了忘在那里的手套，十分钟就回来了。」",
+        "en": "\"Last night at a quarter to midnight I went to the dining car to collect a pair of gloves I had left there. I was back in ten minutes.\""
+      }
+    },
+    {
+      "id": 43,
+      "type": "story",
+      "text": {
+        "zh": "手套就搭在桌上，这条说得通。",
+        "en": "The gloves are draped over the table. The account holds up."
+      }
+    },
+    {
+      "id": 44,
+      "type": "story",
+      "text": {
+        "zh": "贺医生的医药包放在公共走廊的行李架上，谁都能碰到。",
+        "en": "Dr. He's medical bag sits on the luggage rack in the public corridor — within reach of anyone."
+      }
+    },
+    {
+      "id": 45,
+      "type": "story",
+      "text": {
+        "zh": "「昨晚我查了一遍，少了一瓶镇静剂。」贺医生自己主动说的。",
+        "en": "\"I checked my bag last night — a vial of sedative is missing.\" Dr. He volunteers the information himself."
+      }
+    },
+    {
+      "id": 46,
+      "type": "choice",
+      "text": {
+        "zh": "贺医生眼神对上你的，没有回避，主动报告了镇静剂的事。",
+        "en": "Dr. He meets your eyes without flinching and reports the missing sedative of his own accord."
+      },
+      "optA": {
+        "zh": "他最容易下药，先把他当嫌疑人",
+        "en": "He had the easiest access to the drug — treat him as the primary suspect"
+      },
+      "optB": {
+        "zh": "镇静剂是被别人从走廊偷走的",
+        "en": "The sedative was stolen from the corridor by someone else"
+      },
+      "correct": "B",
+      "penalty": {
+        "zh": "你把时间全花在贺医生身上，真凶趁机销毁了一样证据。贺医生后来是你最重要的帮手。",
+        "en": "You spend all your time on Dr. He. The real killer uses the window to destroy a piece of evidence. The doctor will later become your most important ally."
+      },
+      "hint": {
+        "zh": "主动说自己出了差错的人，一般不是用这个差错犯罪的。",
+        "en": "A person who volunteers their own mistake is rarely the one who committed the crime with it."
+      }
+    },
+    {
+      "id": 47,
+      "type": "story",
+      "text": {
+        "zh": "「镇静剂溶进饮料，三十分钟内让人沉睡，之后如果」贺医生没说完。",
+        "en": "\"The sedative, dissolved in a drink, would induce sleep within thirty minutes. After that, if someone were to —\" Dr. He does not finish the sentence."
+      }
+    },
+    {
+      "id": 48,
+      "type": "story",
+      "text": {
+        "zh": "你听懂了。药只是第一步。",
+        "en": "You understand. The drug was only the first step."
+      }
+    },
+    {
+      "id": 49,
+      "type": "story",
+      "text": {
+        "zh": "柳明辉先被迷晕，然后被捂死的。",
+        "en": "Liu Minghui was first rendered unconscious, then smothered."
+      }
+    },
+    {
+      "id": 50,
+      "type": "story",
+      "text": {
+        "zh": "你再检查了一遍包厢，暖气管后面摸出一张撕碎的纸。",
+        "en": "You search the compartment again. Behind the heating pipe, your fingers find a torn piece of paper."
+      }
+    },
+    {
+      "id": 51,
+      "type": "story",
+      "text": {
+        "zh": "拼起来只剩半句话：「你毁了我家，你欠我一条命。」",
+        "en": "Pieced together, it reads only half a sentence: \"You destroyed my family. You owe me a life.\""
+      }
+    },
+    {
+      "id": 52,
+      "type": "story",
+      "text": {
+        "zh": "是女人的字，写得很用力，每一笔都带着压了很久的劲。",
+        "en": "A woman's handwriting, pressed hard into the paper — every stroke carrying the weight of years."
+      }
+    },
+    {
+      "id": 53,
+      "type": "choice",
+      "text": {
+        "zh": "车上女乘客就两个白芷芬和演员钱露。",
+        "en": "There are only two female passengers: Bai Zhifen, and the actress Qian Lu."
+      },
+      "optA": {
+        "zh": "找个借口让白芷芬填张表，看她的字",
+        "en": "Find a pretext to have Bai Zhifen fill out a form and observe her handwriting"
+      },
+      "optB": {
+        "zh": "先去问钱露，演员情绪化，更可能冲动犯案",
+        "en": "Question Qian Lu first — actresses are emotional, more likely to act on impulse"
+      },
+      "correct": "A",
+      "penalty": {
+        "zh": "钱露的字飞扬洒脱，和那张纸完全不像。你绕了一圈，白芷芬那边准备好了。",
+        "en": "Qian Lu's handwriting is bold and free — nothing like the note. You have taken a detour, and Bai Zhifen has had time to prepare."
+      },
+      "hint": {
+        "zh": "茉莉花茶、珍珠，所有线索已经指向同一个人了。",
+        "en": "The jasmine tea. The pearls. Every clue already points to the same person."
+      }
+    },
+    {
+      "id": 54,
+      "type": "story",
+      "text": {
+        "zh": "白芷芬填表时，你盯着她写字，心跳快了一拍。",
+        "en": "As Bai Zhifen fills out the form, you watch her write. Your pulse quickens."
+      }
+    },
+    {
+      "id": 55,
+      "type": "story",
+      "text": {
+        "zh": "「命」这个字的钩，和信纸上写的一模一样。",
+        "en": "The hook on the character for \"life\" — it is identical to the one on the torn note."
+      }
+    },
+    {
+      "id": 56,
+      "type": "story",
+      "text": {
+        "zh": "她感觉到了你的眼神，笔停在纸上没动。",
+        "en": "She feels your gaze. Her pen stops on the page."
+      }
+    },
+    {
+      "id": 57,
+      "type": "story",
+      "act": { "zh": "第三幕  摊牌", "en": "Act III  The Reckoning" },
+      "text": {
+        "zh": "白芷芬胸口别着一枚月牙形的蓝宝石胸针。",
+        "en": "Pinned to Bai Zhifen's chest is a crescent-shaped sapphire brooch."
+      }
+    },
+    {
+      "id": 58,
+      "type": "story",
+      "text": {
+        "zh": "你见过这枚胸针就在柳明辉昨晚炫耀的那本藏品册里。",
+        "en": "You have seen that brooch before — in the collector's album Liu Minghui was showing off last evening."
+      }
+    },
+    {
+      "id": 59,
+      "type": "choice",
+      "text": {
+        "zh": "白芷芬现在有点紧张，防线出现了裂缝。",
+        "en": "Bai Zhifen is tense now. There are cracks in her composure."
+      },
+      "optA": {
+        "zh": "直接问她：「这枚胸针，哪来的？」",
+        "en": "Ask her directly: \"Where did you get this brooch?\""
+      },
+      "optB": {
+        "zh": "先不提，等再收集点证据",
+        "en": "Say nothing — wait until you have gathered more evidence"
+      },
+      "correct": "A",
+      "penalty": {
+        "zh": "等你「准备好」，那枚胸针已经不见了，她的表情也恢复正常了。",
+        "en": "By the time you feel \"ready\", the brooch has vanished and her expression has returned to perfect calm."
+      },
+      "hint": {
+        "zh": "防线松动的时候就是问的时候，等一下就晚了。",
+        "en": "When the defences crack, that is the moment to press. Wait even a moment and it will be too late."
+      }
+    },
+    {
+      "id": 60,
+      "type": "story",
+      "text": {
+        "zh": "她的手盖上了胸针。「我亡夫留给我的。」",
+        "en": "Her hand moves to cover the brooch. \"My late husband left it to me.\""
+      }
+    },
+    {
+      "id": 61,
+      "type": "story",
+      "text": {
+        "zh": "「你亡夫做什么的？」",
+        "en": "\"And what did your late husband do?\""
+      }
+    },
+    {
+      "id": 62,
+      "type": "story",
+      "text": {
+        "zh": "「珠宝商，」她眼圈红了，「后来遇上了柳明辉。」",
+        "en": "\"He was a jeweller.\" Her eyes redden. \"Then he crossed paths with Liu Minghui.\""
+      }
+    },
+    {
+      "id": 63,
+      "type": "story",
+      "text": {
+        "zh": "你终于看见了她那张平静脸背后的东西三年攒下来的恨。",
+        "en": "At last you see what lies behind that composed face: three years of accumulated hatred."
+      }
+    },
+    {
+      "id": 64,
+      "type": "story",
+      "text": {
+        "zh": "白芷芬的丈夫三年前被柳明辉用假合同骗光了家底，半年后去世了。",
+        "en": "Three years ago, Liu Minghui swindled Bai Zhifen's husband out of everything with a fraudulent contract. Her husband died six months later."
+      }
+    },
+    {
+      "id": 65,
+      "type": "story",
+      "text": {
+        "zh": "她一个人带着孩子，首饰都卖了。就这枚胸针没舍得。",
+        "en": "She raised her child alone. Sold every piece of jewellery she owned. Only this brooch she could not bring herself to part with."
+      }
+    },
+    {
+      "id": 66,
+      "type": "story",
+      "text": {
+        "zh": "「他就坐在我旁边，」她的声音裂开了，「我等了三年。」",
+        "en": "\"He was sitting right there beside me.\" Her voice breaks. \"I have waited three years.\""
+      }
+    },
+    {
+      "id": 67,
+      "type": "story",
+      "text": {
+        "zh": "她开始哭，哭得很安静，只有肩膀在动。",
+        "en": "She begins to weep — quietly, silently, only her shoulders moving."
+      }
+    },
+    {
+      "id": 68,
+      "type": "choice",
+      "text": {
+        "zh": "她的防线已经快撑不住了。你怎么做？",
+        "en": "Her defences are nearly spent. What do you do?"
+      },
+      "optA": {
+        "zh": "把那张拼好的纸放到她面前",
+        "en": "Place the reassembled note on the table in front of her"
+      },
+      "optB": {
+        "zh": "告诉她镇静剂的事，施压",
+        "en": "Confront her with the sedative and apply pressure"
+      },
+      "correct": "A",
+      "penalty": {
+        "zh": "她说：「我不知道什么镇静剂。」镇静剂是间接证据，这一招没用。",
+        "en": "\"I don't know anything about a sedative,\" she says. The sedative is circumstantial. The tactic fails."
+      },
+      "hint": {
+        "zh": "自己写的字摆在面前，比任何指控都更难否认。",
+        "en": "Words written in one's own hand, placed before one's own eyes, are harder to deny than any accusation."
+      }
+    },
+    {
+      "id": 69,
+      "type": "story",
+      "text": {
+        "zh": "白芷芬看着那张纸，很久没说话。",
+        "en": "Bai Zhifen stares at the note for a long time without speaking."
+      }
+    },
+    {
+      "id": 70,
+      "type": "story",
+      "text": {
+        "zh": "「我本来只想让他睡着，把那颗钻石要回来，」她说，声音很轻，「给白正清。」",
+        "en": "\"I only meant to put him to sleep — to take back the diamond,\" she says, her voice barely above a whisper. \"For Bai Zhengqing.\""
+      }
+    },
+    {
+      "id": 71,
+      "type": "story",
+      "text": {
+        "zh": "「但我看着他睡着的脸，想到了白正清最后那段日子」",
+        "en": "\"But when I looked at his sleeping face, I thought of Bai Zhengqing's last days —\""
+      }
+    },
+    {
+      "id": 72,
+      "type": "choice",
+      "text": {
+        "zh": "她停下来，看着你，话还没说完。",
+        "en": "She stops. She looks at you. The sentence is unfinished."
+      },
+      "optA": {
+        "zh": "等着，让她说完",
+        "en": "Wait. Let her finish."
+      },
+      "optB": {
+        "zh": "马上叫列车长，联系前面站点的警察",
+        "en": "Go immediately to fetch the conductor and contact the police at the next station"
+      },
+      "correct": "A",
+      "penalty": {
+        "zh": "你带着列车长回来，她已经恢复正常了。「我不知道您在说什么。」",
+        "en": "By the time you return with the conductor, she has composed herself completely. \"I have no idea what you are referring to.\""
+      },
+      "hint": {
+        "zh": "没说完的话，就是最完整的供词。",
+        "en": "An unfinished sentence is the most complete confession of all."
+      }
+    },
+    {
+      "id": 73,
+      "type": "story",
+      "text": {
+        "zh": "「我没有停下来。」",
+        "en": "\"I did not stop myself.\""
+      }
+    },
+    {
+      "id": 74,
+      "type": "story",
+      "text": {
+        "zh": "窗外山上积了厚厚的雪，白得干净。",
+        "en": "Outside, the mountains are buried deep in snow — clean and white and silent."
+      }
+    },
+    {
+      "id": 75,
+      "type": "choice",
+      "act": { "zh": "最终推理", "en": "Final Deduction" },
+      "text": {
+        "zh": "列车长要你给出正式结论。柳明辉怎么死的？",
+        "en": "The conductor requires your official conclusion. How did Liu Minghui die?"
+      },
+      "optA": {
+        "zh": "茶里的镇静剂剂量太大，直接毒死的",
+        "en": "The sedative in the tea was an overdose — he was poisoned directly"
+      },
+      "optB": {
+        "zh": "先被镇静剂迷晕，再被枕头捂死的",
+        "en": "He was first rendered unconscious by the sedative, then smothered with the pillow"
+      },
+      "correct": "B",
+      "penalty": {
+        "zh": "贺医生摇头：「那点量，只够睡几小时。」你没认真听他最开始说的话。",
+        "en": "Dr. He shakes his head. \"That dose would only induce sleep for a few hours.\" You were not listening carefully enough at the start."
+      },
+      "hint": {
+        "zh": "贺医生提过枕头有个奇怪的压痕那不是睡觉压出来的。",
+        "en": "Dr. He mentioned an unusual impression on the pillow. That kind of mark is not made by sleep."
+      }
+    },
+    {
+      "id": 76,
+      "type": "story",
+      "text": {
+        "zh": "列车长点了头，让乘务员把白芷芬的包厢门锁上。",
+        "en": "The conductor nods and instructs the attendant to lock Bai Zhifen's compartment door."
+      }
+    },
+    {
+      "id": 77,
+      "type": "victory",
+      "act": { "zh": "尾声", "en": "Epilogue" },
+      "text": {
+        "zh": "天亮了，火车重新动了起来。\n雪地被太阳一照，反着金光。\n\n你合上了本子。\n\n案子破了。",
+        "en": "Dawn comes. The train begins to move again.\nSunlight strikes the snow and turns it gold.\n\nYou close your notebook.\n\nThe case is solved."
+      }
+    }
+  ]
+}

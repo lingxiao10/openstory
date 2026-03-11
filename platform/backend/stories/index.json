@@ -1,0 +1,26 @@
+[
+  {
+    "id": "northern",
+    "title": { "zh": "华北特快疑云", "en": "The Northern Express" },
+    "desc": { "zh": "一列被大雪困住的火车。一具无人见证的尸体。七个各怀秘密的乘客。", "en": "A train trapped by a blizzard. A body with no witnesses. Seven passengers, each hiding a secret." },
+    "type": "mystery",
+    "category": "mystery",
+    "file": "mystery/northern-express.json"
+  },
+  {
+    "id": "fantasy",
+    "title": { "zh": "青云问道", "en": "Path to Immortality" },
+    "desc": { "zh": "灵根测试大会上，你本是个废柴。却在测试石上，唤醒了前世剑尊的记忆。修仙之路，由此展开。", "en": "At the Spirit Root Ceremony, you were nothing but a failure — until the test stone shattered and the memories of a past-life Sword Sovereign awoke within you." },
+    "type": "mystery",
+    "category": "mystery",
+    "file": "mystery/fantasy-journey.json"
+  },
+  {
+    "id": "apocalypse",
+    "title": { "zh": "废土求生", "en": "Wasteland Survival" },
+    "desc": { "zh": "在末日废墟中寻找曙光营地。数值驱动的生存抉择。", "en": "Find the Dawn Camp in the post-apocalyptic wasteland. Every choice costs something." },
+    "type": "numeric",
+    "category": "numeric",
+    "file": "numeric/apocalypse.json"
+  }
+]

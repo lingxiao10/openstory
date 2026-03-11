@@ -1,0 +1,16 @@
+[
+  {
+    "id": "northern",
+    "titleZh": "华北特快疑云",
+    "titleEn": "THE NORTHERN EXPRESS",
+    "desc": "一列被大雪困住的火车。\n一具无人见证的尸体。\n七个各怀秘密的乘客。",
+    "file": "data/northern-express.json"
+  },
+  {
+    "id": "fantasy",
+    "titleZh": "青云问道",
+    "titleEn": "PATH TO IMMORTALITY",
+    "desc": "灵根测试大会上，你本是个废柴。\n却在测试石上，唤醒了前世剑尊的记忆。\n修仙之路，由此展开。",
+    "file": "data/fantasy-journey.json"
+  }
+]

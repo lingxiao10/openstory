@@ -1,0 +1,608 @@
+{
+  "id": "apocalypse",
+  "title": { "zh": "废土求生", "en": "Wasteland Survival" },
+  "description": {
+    "zh": "在末日废墟中寻找曙光营地。数值驱动的生存抉择。",
+    "en": "Find the Dawn Camp in the post-apocalyptic wasteland. Every choice costs something."
+  },
+  "type": "numeric",
+  "statDefs": {
+    "life":     { "name": { "zh": "生命", "en": "Life" },     "icon": "❤️", "color": "#ef4444", "bg": "#7f1d1d" },
+    "stamina":  { "name": { "zh": "体力", "en": "Stamina" },  "icon": "⚡", "color": "#f59e0b", "bg": "#78350f" },
+    "mood":     { "name": { "zh": "心情", "en": "Mood" },     "icon": "😊", "color": "#3b82f6", "bg": "#1e3a5f" },
+    "supplies": { "name": { "zh": "物资", "en": "Supplies" }, "icon": "🎒", "color": "#22c55e", "bg": "#14532d" }
+  },
+  "itemDefs": {
+    "iron_pipe": { "name": { "zh": "铁管",    "en": "Iron Pipe" },      "icon": "🔧", "desc": { "zh": "沉重但打起来很疼",   "en": "Heavy, but hits like a truck" } },
+    "dagger":    { "name": { "zh": "匕首",    "en": "Dagger" },         "icon": "🗡️", "desc": { "zh": "轻便锋利，适合偷袭", "en": "Light and sharp, perfect for ambushes" } },
+    "medkit":    { "name": { "zh": "急救包",  "en": "First Aid Kit" },  "icon": "💊", "desc": { "zh": "关键时刻能救命",     "en": "Can save your life when it matters most" } },
+    "food_pack": { "name": { "zh": "高能口粮","en": "Energy Rations" }, "icon": "🥫", "desc": { "zh": "补充体力的好东西",   "en": "Tasteless but keeps you going" } },
+    "hammer":    { "name": { "zh": "铁锤",    "en": "Iron Hammer" },    "icon": "🔨", "desc": { "zh": "一锤子下去非死即伤", "en": "One swing is usually enough" } },
+    "bow":       { "name": { "zh": "自制弓",  "en": "Makeshift Bow" },  "icon": "🏹", "desc": { "zh": "远程攻击，安全可靠", "en": "Keep your distance and stay safe" } },
+    "lighter":   { "name": { "zh": "打火机",  "en": "Lighter" },        "icon": "🔥", "desc": { "zh": "黑暗中的希望之光",   "en": "A small flame in the endless dark" } },
+    "rope":      { "name": { "zh": "绳索",    "en": "Rope" },           "icon": "🪢", "desc": { "zh": "攀爬捆绑都好用",     "en": "Useful for climbing or binding" } }
+  },
+  "cards": [
+    {
+      "id": 0,
+      "type": "story",
+      "text": { "zh": "我从碎石堆里醒过来，全身疼得要死，天是灰红色的，远处有不像人的叫声。", "en": "I wake up in a pile of rubble. Every inch of my body screams with pain. The sky is a dull grey-red, and somewhere in the distance, something is howling — and it doesn't sound human." }
+    },
+    {
+      "id": 1,
+      "type": "story",
+      "text": { "zh": "口袋里有张皱巴巴的纸条——「往北走，曙光营地，最后的安全区」。", "en": "There's a crumpled note in my pocket: \"Head north. Dawn Camp. The last safe zone.\"" }
+    },
+    {
+      "id": 2,
+      "type": "story",
+      "text": { "zh": "我在废墟里翻了一阵，找到两样东西。", "en": "I dig through the rubble and come up with two things." }
+    },
+    {
+      "id": 3,
+      "type": "choice",
+      "text": { "zh": "一根铁管和一把匕首，只能带一样，多了跑不动。", "en": "An iron pipe and a dagger. I can only carry one — too much weight and I won't be able to run." },
+      "choices": [
+        {
+          "label": { "zh": "拿铁管", "en": "Take the iron pipe" },
+          "text": { "zh": "铁管挺沉，但抡起来什么脑袋都得开瓢。", "en": "The pipe is heavy, but swing it hard enough and anything's skull will crack." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": 0 },
+          "giveItem": "iron_pipe"
+        },
+        {
+          "label": { "zh": "拿匕首", "en": "Take the dagger" },
+          "text": { "zh": "匕首插腰上几乎没重量，灵活才是活下去的关键。", "en": "The dagger barely weighs anything at my hip. In this world, staying agile is what keeps you alive." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": 0 },
+          "giveItem": "dagger"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "story",
+      "text": { "zh": "路两边的楼全塌了一半，到处是干掉的血迹，但没尸体——那些东西什么都吃。", "en": "The buildings on both sides of the road are half-collapsed. Dried blood stains the ground everywhere, but no bodies — whatever's out there eats everything." }
+    },
+    {
+      "id": 5,
+      "type": "story",
+      "text": { "zh": "走了俩小时，药店废墟里传出声音：「救命……有人吗……」", "en": "Two hours in, a voice drifts out from the ruins of a pharmacy: \"Help… is anyone there…\"" }
+    },
+    {
+      "id": 6,
+      "type": "choice",
+      "text": { "zh": "有人在求救，但末日之后什么陷阱都有。", "en": "Someone's calling for help. But after the end of the world, any sound could be a trap." },
+      "choices": [
+        {
+          "label": { "zh": "过去救人", "en": "Go help them" },
+          "text": { "zh": "救出个大叔他给了个打火机，心里挺踏实的，就是搬碎石出了一身汗水壶快见底了。", "en": "I pull an old man out of the rubble and he hands me a lighter in thanks. Feels good. But all that work soaked through my shirt and nearly emptied my water bottle." },
+          "effects": { "life": 0, "stamina": 0, "mood": 2, "supplies": -1 },
+          "giveItem": "lighter"
+        },
+        {
+          "label": { "zh": "装没听见", "en": "Pretend I didn't hear anything" },
+          "text": { "zh": "我加快脚步走了没浪费一滴水，但那声音越来越弱，心里堵得慌。", "en": "I pick up my pace and keep walking. Didn't waste a drop of water. But the voice kept getting weaker, and I can't shake the weight of it in my chest." },
+          "effects": { "life": 0, "stamina": 0, "mood": -2, "supplies": 1 }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "story",
+      "text": { "zh": "拐进巷子，我第一次近距离看到那种东西——一个灰白色的人形怪物蹲在车上啃死猫。", "en": "I turn down an alley and see one up close for the first time — a grey-white humanoid creature crouched on a car, gnawing on a dead cat." }
+    },
+    {
+      "id": 8,
+      "type": "story",
+      "text": { "zh": "它闻到我了，猛转过头，比正常人高一头，指甲跟刀片似的。", "en": "It smells me. Its head snaps around — a full head taller than any person, with fingernails like blades." }
+    },
+    {
+      "id": 9,
+      "type": "choice",
+      "text": { "zh": "它朝我扑过来了。", "en": "It lunges at me." },
+      "choices": [
+        {
+          "label": { "zh": "正面干", "en": "Fight it head-on" },
+          "text": { "zh": "干掉了它但胳膊被抓了道口子，不过第一次杀怪信心爆棚。", "en": "I take it down, but it rakes a gash across my arm. Still — killing my first one of these things feels like something." },
+          "effects": { "life": -2, "stamina": 0, "mood": 2, "supplies": 0 },
+          "bonusIf": { "item": "iron_pipe", "bonus": { "life": 2, "stamina": 0, "mood": 0, "supplies": 0 } }
+        },
+        {
+          "label": { "zh": "撒腿就跑", "en": "Run for it" },
+          "text": { "zh": "跑了三条街甩掉了人倒是没事，但跑得跟狗一样太窝囊了。", "en": "I sprint three blocks before I lose it. No damage, but running like that — it's humiliating." },
+          "effects": { "life": 1, "stamina": 0, "mood": -2, "supplies": 0 },
+          "bonusIf": { "item": "dagger", "bonus": { "life": 0, "stamina": 0, "mood": 2, "supplies": 0 } }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "story",
+      "text": { "zh": "我靠在一个门面房里歇气，手还在抖，这世界真他妈的疯了。", "en": "I slump against the wall of a shopfront to catch my breath. My hands won't stop shaking. This world has lost its mind." }
+    },
+    {
+      "id": 11,
+      "type": "story",
+      "text": { "zh": "门口突然进来个穿脏白大褂的女孩——「别紧张！我叫苏晴，是护士。」", "en": "A girl in a dirty white lab coat appears in the doorway. \"Easy! I'm Su Qing. I'm a nurse.\"" }
+    },
+    {
+      "id": 12,
+      "type": "story",
+      "text": { "zh": "她也要去曙光营地，说有个伴比单打独斗好，我没理由拒绝，就一起走了。", "en": "She's heading to Dawn Camp too. Says two people are better than one out here. Hard to argue with that, so we set off together." }
+    },
+    {
+      "id": 13,
+      "type": "choice",
+      "text": { "zh": "苏晴说她会包扎，让我把伤口给她看看，不过得用掉一些绷带。", "en": "Su Qing offers to dress my wound. She says she can handle it — but it'll use up some of our bandages." },
+      "choices": [
+        {
+          "label": { "zh": "让她处理伤口", "en": "Let her treat it" },
+          "text": { "zh": "她手法很利索帮我包扎好了伤口不疼了，就是消毒水和绷带用掉不少。", "en": "She works fast and clean — the pain fades almost immediately. But the antiseptic and bandages take a real dent out of our supplies." },
+          "effects": { "life": 2, "stamina": 0, "mood": 0, "supplies": -1 }
+        },
+        {
+          "label": { "zh": "先留着药品赶路", "en": "Save the supplies and keep moving" },
+          "text": { "zh": "我说不急留着以后用，结果伤口越来越疼到晚上开始发炎了。", "en": "I tell her it can wait. By nightfall, the wound is throbbing and starting to swell — infected." },
+          "effects": { "life": -2, "stamina": 0, "mood": 0, "supplies": 1 }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "story",
+      "text": { "zh": "有个伴果然不一样，路上有人说话不那么闷了，苏晴笑起来有个小酒窝。", "en": "Having company really does make a difference. The road feels shorter when there's someone to talk to. Su Qing has a dimple when she laughs." }
+    },
+    {
+      "id": 15,
+      "type": "story",
+      "text": { "zh": "路边有个被砸烂大门的超市，里面黑漆漆的，不知道有没有东西，也不知道有没有危险。", "en": "A supermarket along the road — its front gate smashed in, the interior pitch black. Could be supplies in there. Could be worse." }
+    },
+    {
+      "id": 16,
+      "type": "choice",
+      "text": { "zh": "进去搜还是算了？", "en": "Search it, or keep moving?" },
+      "choices": [
+        {
+          "label": { "zh": "仔细搜", "en": "Search it thoroughly" },
+          "text": { "zh": "翻了一遍找到不少吃的和绷带收获很大，但搜了太久累得腿都不是自己的了。", "en": "A solid haul — food, bandages, the works. But by the time we're done, my legs feel like they belong to someone else." },
+          "effects": { "life": 0, "stamina": -2, "mood": 0, "supplies": 3 }
+        },
+        {
+          "label": { "zh": "门口抓几样就撤", "en": "Grab a few things near the entrance and go" },
+          "text": { "zh": "在门口顺了几样就走了，没怎么费劲但也没搜到多少好东西。", "en": "We snag a few things from just inside the door and move on. Didn't cost us much energy, but we didn't find much either." },
+          "effects": { "life": 0, "stamina": 1, "mood": 0, "supplies": -1 }
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "story",
+      "text": { "zh": "穿过居民区，到处是空窗户，苏晴说：「这地方拍恐怖片都不用布景。」", "en": "We pass through a residential block, every window a dark hollow. Su Qing says, \"You wouldn't even need to dress a set if you wanted to film a horror movie here.\"" }
+    },
+    {
+      "id": 18,
+      "type": "story",
+      "text": { "zh": "她说毕业才一年就末日了，「第一个月房租都没交呢世界就完了。」", "en": "She tells me she'd only been out of school a year when the world ended. \"I hadn't even paid my first month's rent yet.\"" }
+    },
+    {
+      "id": 19,
+      "type": "story",
+      "text": { "zh": "前面传来连续枪声，不是单发是连射，有人在打仗而且装备很好。", "en": "Gunfire ahead — not single shots, but sustained bursts. Whoever's out there is armed and in a serious fight." }
+    },
+    {
+      "id": 20,
+      "type": "choice",
+      "text": { "zh": "枪声从东边传来，越来越近了，得赶紧决定怎么办。", "en": "The shots are coming from the east and getting closer. We need to decide fast." },
+      "choices": [
+        {
+          "label": { "zh": "冲过去帮忙", "en": "Rush in and help" },
+          "text": { "zh": "一个短发女人单挑三只变异犬，我冲上去帮忙被刮了一下，不过打赢了心里痛快。", "en": "A short-haired woman fighting three mutant dogs alone. I rush in to help and take a scratch for it — but we win, and it feels good." },
+          "effects": { "life": -1, "stamina": 0, "mood": 2, "supplies": 0 }
+        },
+        {
+          "label": { "zh": "找掩体观察", "en": "Find cover and watch" },
+          "text": { "zh": "躲在车后面看那女人浴血奋战自己缩着不动，人没事但心里特别不是滋味。", "en": "We hide behind a wrecked car and watch the woman fight bloody and alone. We make it out fine, but I feel sick about it." },
+          "effects": { "life": 1, "stamina": 0, "mood": -2, "supplies": 0 }
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "story",
+      "text": { "zh": "那个女人叫林夕，前特警，短发，左脸有道疤，眼神冷得像刀子，手里拿着十字弩。", "en": "The woman's name is Lin Xi. Former special police. Short hair. A scar on her left cheek. Eyes cold as a blade. She's carrying a crossbow." }
+    },
+    {
+      "id": 22,
+      "type": "story",
+      "text": { "zh": "她也要去曙光营地，一个人走了三天弹药快没了，自然而然就一起走了。", "en": "She's heading to Dawn Camp too — been on the road alone for three days, nearly out of bolts. It makes sense to travel together." }
+    },
+    {
+      "id": 23,
+      "type": "choice",
+      "text": { "zh": "林夕三天没怎么吃东西了，脸色很差，但她不好意思开口。", "en": "Lin Xi hasn't eaten properly in three days. Her color is bad, but she won't ask." },
+      "choices": [
+        {
+          "label": { "zh": "主动分她食物", "en": "Offer her food without being asked" },
+          "text": { "zh": "我把吃的分了一份给她，她接过去的时候手在抖，吃完脸色好多了大家都轻松不少。", "en": "I hold out a portion without a word. Her hands are trembling when she takes it. After she eats, the tension in the group eases." },
+          "effects": { "life": 0, "stamina": 0, "mood": 2, "supplies": -2 }
+        },
+        {
+          "label": { "zh": "假装没注意到", "en": "Pretend not to notice" },
+          "text": { "zh": "我没说什么继续赶路，林夕硬撑着走但眼神更冷了，气氛尴尬得要命。", "en": "I say nothing and keep walking. Lin Xi pushes on, but her eyes go even colder. The silence between us is suffocating." },
+          "effects": { "life": 0, "stamina": 0, "mood": -2, "supplies": 1 }
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "story",
+      "text": { "zh": "三个人走快多了，林夕在前面探路，偶尔回头看看苏晴，眼神没那么冷了。", "en": "Three people move much faster. Lin Xi scouts ahead, glancing back at Su Qing now and then. Her eyes have softened slightly." }
+    },
+    {
+      "id": 25,
+      "type": "story",
+      "text": { "zh": "傍晚到了个加油站，便利店货架上还剩点东西，但背包只装得下一类。", "en": "By evening we reach a gas station. The convenience store shelves still have some things on them, but we can only fit one type of supply in the pack." }
+    },
+    {
+      "id": 26,
+      "type": "choice",
+      "text": { "zh": "药品还是食物，只能选一样。", "en": "Medicine or food — pick one." },
+      "choices": [
+        {
+          "label": { "zh": "急救药品", "en": "First aid supplies" },
+          "text": { "zh": "消毒水绷带止痛药，苏晴说有这些她就能处理大部分伤口。", "en": "Antiseptic, bandages, painkillers. Su Qing says with this she can handle most wounds we're likely to encounter." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": 0 },
+          "giveItem": "medkit"
+        },
+        {
+          "label": { "zh": "高能口粮", "en": "Energy rations" },
+          "text": { "zh": "压缩饼干和能量棒，味道一言难尽但至少有得吃了。", "en": "Compressed crackers and energy bars. The taste is genuinely indescribable — but at least there's something to eat." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": 0 },
+          "giveItem": "food_pack"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "type": "story",
+      "text": { "zh": "第二天走了没俩小时，前后路口突然全被车堵死了，林夕瞬间拉起弩。", "en": "Less than two hours into the second day, both ends of the road are suddenly blocked by vehicles. Lin Xi has her crossbow up before I can blink." }
+    },
+    {
+      "id": 28,
+      "type": "story",
+      "text": { "zh": "冒出七八个拿棍棒砍刀的，领头的独眼满脸横肉，叼着烟——他们叫他蝎子。", "en": "Seven or eight men emerge with clubs and machetes. The one in front has one eye, a face built like a fist, and a cigarette dangling from his mouth. They call him Scorpion." }
+    },
+    {
+      "id": 29,
+      "type": "story",
+      "text": { "zh": "蝎子后面走出个光头纹蜈蚣的，转着刀慢悠悠的：「我叫赵铁，过路费——交出所有东西。」", "en": "Behind Scorpion steps a bald man with a centipede tattooed across his skull, casually spinning a knife. \"Name's Zhao Tie. Toll road. Hand over everything.\"" }
+    },
+    {
+      "id": 30,
+      "type": "story",
+      "text": { "zh": "赵铁看着苏晴和林夕：「两个漂亮姑娘，要不留下来？」蝎子在旁边猥琐地笑。", "en": "Zhao Tie eyes Su Qing and Lin Xi. \"Two pretty girls — why not stay awhile?\" Scorpion grins beside him." }
+    },
+    {
+      "id": 31,
+      "type": "choice",
+      "text": { "zh": "他们七八个人，我们三个，硬拼吃亏但就这么认怂也咽不下去。", "en": "Seven or eight against three. Fighting straight up is a losing bet — but I can't just swallow this." },
+      "choices": [
+        {
+          "label": { "zh": "反抗", "en": "Fight back" },
+          "text": { "zh": "我一拳打蝎子脸上，但人太多被按地上揍了一顿，不过这口气出了值。", "en": "I plant a fist in Scorpion's face. They dog-pile me and I take a serious beating — but it was worth it." },
+          "effects": { "life": -3, "stamina": 0, "mood": 2, "supplies": 0 }
+        },
+        {
+          "label": { "zh": "先忍了", "en": "Swallow it for now" },
+          "text": { "zh": "我把东西倒地上，蝎子当面嚼我的吃的还撞了苏晴一下，窝囊到想死。", "en": "I dump everything on the ground. Scorpion chews my food right in front of me and deliberately shoves Su Qing as he walks past. I've never felt more pathetic." },
+          "effects": { "life": 0, "stamina": 0, "mood": -3, "supplies": -2 }
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "type": "story",
+      "text": { "zh": "赵铁走了，苏晴蹲在我旁边擦伤口，嘴唇抿得紧紧的，林夕盯着他们离开的方向。", "en": "Zhao Tie leaves. Su Qing crouches beside me and cleans my wounds in silence, lips pressed thin. Lin Xi stares in the direction they disappeared." }
+    },
+    {
+      "id": 33,
+      "type": "story",
+      "text": { "zh": "总有一天我会让那个秃头好看。苏晴按了按我肩膀：「先活着，有命在什么都有机会。」", "en": "Someday I'll make that bald bastard pay. Su Qing squeezes my shoulder. \"Stay alive first. As long as you're breathing, there's still a chance.\"" }
+    },
+    {
+      "id": 34,
+      "type": "story",
+      "text": { "zh": "经过一个便利店，收银台后面突然弹出个脑袋：「啊！」一个扎俩揪揪的女孩抱着一袋薯片。", "en": "We pass a convenience store. A head pops up from behind the counter: \"Aah!\" A girl with two little pigtails, clutching a bag of chips." }
+    },
+    {
+      "id": 35,
+      "type": "story",
+      "text": { "zh": "她叫小萌，高三生，在这躲了好几天了，居然还在笑：「太好了有活人！我快闷死了！」", "en": "Her name is Xiaomeng. A senior in high school. She's been hiding here for days — and somehow she's still smiling. \"Oh thank god, real people! I was going crazy in here!\"" }
+    },
+    {
+      "id": 36,
+      "type": "choice",
+      "text": { "zh": "小萌跟着我们走了，她手里那袋薯片哗哗响，大家都饿得不行。", "en": "Xiaomeng falls in with us. That bag of chips crinkles with every step, and everyone's starving." },
+      "choices": [
+        {
+          "label": { "zh": "一起分着吃薯片", "en": "Share the chips now" },
+          "text": { "zh": "薯片分了每人一把，久违的零食味让大家都笑了，就是吃完啥也不剩了。", "en": "A handful each. The taste of junk food hits like a memory from another life. Everyone laughs. But the bag is empty when we're done." },
+          "effects": { "life": 0, "stamina": 0, "mood": 2, "supplies": -2 }
+        },
+        {
+          "label": { "zh": "让她把薯片收好省着吃", "en": "Tell her to save them for later" },
+          "text": { "zh": "我说留着路上慢慢吃，小萌乖乖收起来不吱声了，气氛沉闷了不少。", "en": "I tell her to ration them. Xiaomeng nods and tucks the bag away without a word. The mood drops." },
+          "effects": { "life": 0, "stamina": 0, "mood": -2, "supplies": 1 }
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "type": "story",
+      "text": { "zh": "远处天际线有几道黑烟，小萌说那方向以前是她学校，然后她安静了好一会儿。", "en": "Black smoke rises along the distant skyline. Xiaomeng says her school used to be in that direction. Then she goes quiet for a long time." }
+    },
+    {
+      "id": 38,
+      "type": "story",
+      "text": { "zh": "穿过公园的时候草丛里窜出六七只变异犬，没毛，灰色皮，牙齿跟刀子一样，把我们围了。", "en": "Crossing the park, six or seven mutant dogs burst from the undergrowth. Hairless. Grey-skinned. Teeth like blades. They circle us." }
+    },
+    {
+      "id": 39,
+      "type": "choice",
+      "text": { "zh": "变异犬堵路了，太多了不好打，但我包里还有食物。", "en": "The dogs are blocking our path. There are too many to fight clean — but I still have food in my pack." },
+      "choices": [
+        {
+          "label": { "zh": "打穿过去", "en": "Fight through" },
+          "text": { "zh": "林夕弩射倒两只，我被一只咬了小腿，苏晴砸石头才救下我，打完赢了但腿在流血。", "en": "Lin Xi pins two with her crossbow. One gets its teeth into my calf — Su Qing knocks it off with a rock. We win, but my leg is bleeding." },
+          "effects": { "life": -2, "stamina": 0, "mood": 0, "supplies": 0 },
+          "bonusIf": { "item": "iron_pipe", "bonus": { "life": 2, "stamina": 0, "mood": 0, "supplies": 0 } }
+        },
+        {
+          "label": { "zh": "扔食物引开", "en": "Throw food to lure them away" },
+          "text": { "zh": "把吃的全扔出去它们一窝蜂扑过去，趁机跑了人倒是没事但物资全没了。", "en": "I hurl all the food in the opposite direction. They swarm it instantly. We run. Nobody hurt — but our supplies are gone." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": -3 }
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "type": "story",
+      "text": { "zh": "天快黑了，那些东西晚上更活跃，必须找地方躲。", "en": "The light is fading. Those things are more active after dark. We need shelter." }
+    },
+    {
+      "id": 41,
+      "type": "story",
+      "text": { "zh": "前面一个地下车库又黑又闷但隐蔽，旁边居民楼天台开阔但暴露。", "en": "Ahead: an underground parking garage — dark and stuffy, but hidden. Next to it, a residential building with a rooftop — open, but exposed." }
+    },
+    {
+      "id": 42,
+      "type": "choice",
+      "text": { "zh": "在哪过夜？", "en": "Where do we sleep?" },
+      "choices": [
+        {
+          "label": { "zh": "地下车库", "en": "Underground garage" },
+          "text": { "zh": "用车堵了入口睡了个安稳觉体力恢复不少，但黑得跟棺材似的发霉味太上头了。", "en": "We block the entrance with a car and actually get some real sleep. Bodies recover well — but the pitch darkness and mildew smell are hard to shake." },
+          "effects": { "life": 0, "stamina": 2, "mood": -2, "supplies": 0 }
+        },
+        {
+          "label": { "zh": "楼顶天台", "en": "Rooftop" },
+          "text": { "zh": "满天星星苏晴靠在我旁边聊天心情特别好，但风太大冻得一夜没怎么合眼。", "en": "A sky full of stars. Su Qing leans against me and we talk for hours. My mood lifts more than it has in days. But the wind is brutal — I barely sleep." },
+          "effects": { "life": 0, "stamina": -2, "mood": 2, "supplies": 0 }
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "type": "story",
+      "text": { "zh": "半夜苏晴来换班，突然说：「末日之前我连跟喜欢的人表白都不敢，现在想想真傻。」", "en": "In the middle of the night, Su Qing comes to take her watch. Out of nowhere she says, \"Before all this, I was too scared to tell someone I liked them. Feels pretty stupid now.\"" }
+    },
+    {
+      "id": 44,
+      "type": "story",
+      "text": { "zh": "她转头看我：「到了营地我请你吃罐头吧，现在只有这个了。」月光下她笑了。", "en": "She turns to look at me. \"When we get to the camp, I'll treat you to canned food. It's all there is.\" She smiles in the moonlight." }
+    },
+    {
+      "id": 45,
+      "type": "story",
+      "text": { "zh": "第二天上路没多远，林夕突然抬手——她听到引擎声了。", "en": "Not far into the next morning, Lin Xi raises her fist. She's heard engines." }
+    },
+    {
+      "id": 46,
+      "type": "story",
+      "text": { "zh": "一辆改装皮卡冲出来，蝎子站在车上端着霰弹枪：「赵哥说了，上次的账没算完。」", "en": "A modified pickup truck roars out. Scorpion is standing in the bed, pointing a shotgun at us. \"Boss says the last tab isn't settled yet.\"" }
+    },
+    {
+      "id": 47,
+      "type": "choice",
+      "text": { "zh": "这次蝎子有枪了，身后是死路，退无可退。", "en": "Scorpion has a gun this time. There's a wall at our backs. No retreating." },
+      "choices": [
+        {
+          "label": { "zh": "拼了", "en": "Go all in" },
+          "text": { "zh": "林夕射中蝎子手臂枪脱手，我拼命放倒两个累到脱力，但靠着一股狠劲没让自己倒下。", "en": "Lin Xi puts a bolt through Scorpion's arm — the shotgun clatters away. I take down two more through sheer fury, barely standing when it's over." },
+          "effects": { "life": 1, "stamina": -3, "mood": 0, "supplies": 0 },
+          "bonusIf": { "item": "dagger", "bonus": { "life": 0, "stamina": 2, "mood": 0, "supplies": 0 } }
+        },
+        {
+          "label": { "zh": "散开跑", "en": "Split up and run" },
+          "text": { "zh": "「分头跑！」没怎么费力气但跑的时候被铁丝网刮了一道大口子，血流了一路。", "en": "\"Split up, run!\" It doesn't take much out of me — but a barbed wire fence opens a long gash on my side. I bleed all the way to where we regroup." },
+          "effects": { "life": -2, "stamina": 1, "mood": 0, "supplies": 0 }
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "type": "story",
+      "text": { "zh": "我跟林夕小萌汇合了，但苏晴不在，我喊她名字没人应。", "en": "I find Lin Xi and Xiaomeng. Su Qing isn't with them. I call her name. Silence." }
+    },
+    {
+      "id": 49,
+      "type": "story",
+      "text": { "zh": "远处传来她的尖叫，蝎子把她按在皮卡车斗里一脚踩着她的背。", "en": "A scream from the distance. Scorpion has Su Qing pinned to the truck bed, his boot on her back." }
+    },
+    {
+      "id": 50,
+      "type": "story",
+      "text": { "zh": "赵铁摇下车窗竖了个中指：「小护士我先借走了，想要的话来东边钢铁厂找我。」车开走了。", "en": "Zhao Tie rolls down the window and raises a middle finger. \"I'm borrowing your little nurse. If you want her back, come find me at the steel mill, east side.\" The truck drives away." }
+    },
+    {
+      "id": 51,
+      "type": "story",
+      "text": { "zh": "林夕射了一箭扎进轮胎但车没停，我跪在地上拳头砸柏油路面，小萌哭了。", "en": "Lin Xi fires a bolt into one of the tires. The truck doesn't stop. I'm on my knees, pounding the asphalt with my fists. Xiaomeng is crying." }
+    },
+    {
+      "id": 52,
+      "type": "choice",
+      "text": { "zh": "林夕说：「我知道那个厂在哪，但我们现在去等于送死。」", "en": "Lin Xi says, \"I know where that factory is. But going right now is suicide.\"" },
+      "choices": [
+        {
+          "label": { "zh": "我不管立刻去", "en": "I don't care — we go now" },
+          "text": { "zh": "我满脑子都是苏晴的脸顾不上别的了，什么都没带就往东跑。", "en": "All I can see is Su Qing's face. I don't grab anything — I just start running east." },
+          "effects": { "life": 0, "stamina": 0, "mood": 3, "supplies": -2 }
+        },
+        {
+          "label": { "zh": "先找装备", "en": "Find gear first" },
+          "text": { "zh": "忍住冲动先搜了一圈找到些东西，但想到苏晴还在那受苦我心如刀绞。", "en": "I force myself to hold back and search the area first. We find a few things — but every second I'm thinking about what Su Qing is going through is like a knife in my gut." },
+          "effects": { "life": 0, "stamina": 0, "mood": -3, "supplies": 2 }
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "type": "story",
+      "text": { "zh": "钢铁厂在东边五公里，以前是冶炼厂，赵铁改成了老巢，守卫都有武器。", "en": "The steel mill is five kilometers east. It used to be a smelting plant. Zhao Tie has turned it into his base, with armed guards throughout." }
+    },
+    {
+      "id": 54,
+      "type": "story",
+      "text": { "zh": "路上林夕在翻倒的工程车里找到两样东西摆在我面前。", "en": "On the way, Lin Xi digs through an overturned construction vehicle and lays two things in front of me." }
+    },
+    {
+      "id": 55,
+      "type": "story",
+      "text": { "zh": "一把钢管焊的铁锤，和一张用弹簧钢丝做的弓配五支铁箭。", "en": "A hammer welded from steel pipe, and a bow fashioned from spring wire strung with five iron-tipped arrows." }
+    },
+    {
+      "id": 56,
+      "type": "choice",
+      "text": { "zh": "要去打架了，选个靠得住的家伙。", "en": "We're heading into a fight. Pick something reliable." },
+      "choices": [
+        {
+          "label": { "zh": "铁锤", "en": "Iron hammer" },
+          "text": { "zh": "死沉，但一下能砸碎脑袋，正面突破就靠它了。", "en": "Dead heavy, but one swing can cave a skull. If we're going through the front, this is what I need." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": 0 },
+          "giveItem": "hammer"
+        },
+        {
+          "label": { "zh": "自制弓", "en": "Makeshift bow" },
+          "text": { "zh": "拉了拉弹性不错，五支箭不多但能远程解决问题。", "en": "I test the draw — solid tension. Five arrows isn't much, but being able to hit from range could make the difference." },
+          "effects": { "life": 0, "stamina": 0, "mood": 0, "supplies": 0 },
+          "giveItem": "bow"
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "type": "story",
+      "text": { "zh": "钢铁厂到了，但大门前蹲着一只我没见过的东西——两米多高四条腿，身上长着甲壳。", "en": "The steel mill is in sight. But crouched at the main gate is something I've never seen before — over two meters tall, four-legged, armored with a chitinous shell." }
+    },
+    {
+      "id": 58,
+      "type": "story",
+      "text": { "zh": "它喘着粗气带着腐烂恶臭，要进厂必须过它这关，不过它好像视力不太好靠闻的。", "en": "It breathes in wet, ragged heaves, trailing a stench of rot. To get inside, we have to get past it. But it seems to navigate by smell rather than sight." }
+    },
+    {
+      "id": 59,
+      "type": "choice",
+      "text": { "zh": "甲壳很硬正面不一定打得穿，但它转身慢。", "en": "The shell is tough — a frontal attack might not penetrate. But it turns slowly." },
+      "choices": [
+        {
+          "label": { "zh": "正面打", "en": "Attack it directly" },
+          "text": { "zh": "被它甩了一下差点断骨头，但找到缝隙捅进去了，好在没怎么跑没费多少力气。", "en": "It flings me and I nearly break something — but I find a gap in the plating and drive my weapon through. Didn't have to run much, so I'm not too drained." },
+          "effects": { "life": -3, "stamina": 1, "mood": 0, "supplies": 0 },
+          "bonusIf": { "item": "hammer", "bonus": { "life": 2, "stamina": 0, "mood": 0, "supplies": 0 } }
+        },
+        {
+          "label": { "zh": "引开它溜过去", "en": "Lure it away and slip past" },
+          "text": { "zh": "小萌扔石头我们从侧面疯跑绕过去了人没事，就是跑得上气不接下气快虚脱了。", "en": "Xiaomeng throws rocks to draw its attention while we sprint around the side. Nobody hurt — but I'm running on empty." },
+          "effects": { "life": 1, "stamina": -3, "mood": 0, "supplies": 0 },
+          "bonusIf": { "item": "bow", "bonus": { "life": 0, "stamina": 2, "mood": 0, "supplies": 0 } }
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "type": "story",
+      "text": { "zh": "绕到侧面围墙有几个洞，里面传来笑声——赵铁的人在喝酒，大概五六个。", "en": "Around the side, the perimeter wall has gaps. Through them: laughter. Zhao Tie's men drinking — five or six of them." }
+    },
+    {
+      "id": 61,
+      "type": "story",
+      "text": { "zh": "小萌指着一个生锈侧门：「那好像没人。」正门倒是只有两个哨兵看着不太精神。", "en": "Xiaomeng points at a rusted side door. \"Looks unguarded.\" The main gate has two sentries — but they look half-asleep." }
+    },
+    {
+      "id": 62,
+      "type": "choice",
+      "text": { "zh": "正门人少但会被看见，侧门隐蔽但不知里面啥情况。", "en": "The front has fewer guards but no cover. The side door is stealthy — but we don't know what's behind it." },
+      "choices": [
+        {
+          "label": { "zh": "正门强攻", "en": "Storm the front gate" },
+          "text": { "zh": "林夕放倒门卫我顺手搜了他们身上翻到点东西，但打进去费了不少劲。", "en": "Lin Xi drops the guards. I pat them down and find a few useful things. But forcing the gate takes a real toll on us." },
+          "effects": { "life": 0, "stamina": -2, "mood": 0, "supplies": 1 },
+          "bonusIf": { "item": "dagger", "bonus": { "life": 0, "stamina": 0, "mood": 2, "supplies": 0 } }
+        },
+        {
+          "label": { "zh": "侧门偷偷进", "en": "Sneak in through the side door" },
+          "text": { "zh": "从侧门悄悄溜进去没怎么费劲，但绕了一大圈路上喝完了最后的水。", "en": "We slip through without being seen and barely break a sweat — but the long route around drains the last of our water." },
+          "effects": { "life": 0, "stamina": 1, "mood": 0, "supplies": -1 }
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "type": "story",
+      "text": { "zh": "在工厂深处的铁皮房里找到苏晴了，绑在椅子上贴着胶带，脸上有被打的痕迹。", "en": "We find Su Qing deep inside the factory, in a corrugated iron room — bound to a chair with tape, bruises on her face." }
+    },
+    {
+      "id": 64,
+      "type": "story",
+      "text": { "zh": "我解开绳子撕掉胶带，苏晴扑过来哭着说：「你真的来了……」", "en": "I cut the ropes and tear off the tape. Su Qing collapses into me, crying. \"You actually came…\"" }
+    },
+    {
+      "id": 65,
+      "type": "story",
+      "text": { "zh": "门口传来鼓掌声，蝎子靠在门框上笑：「好感人啊，可惜故事到这该结束了。」", "en": "Slow clapping from the doorway. Scorpion leans against the frame, grinning. \"Real touching. Too bad the story ends here.\"" }
+    },
+    {
+      "id": 66,
+      "type": "choice",
+      "text": { "zh": "蝎子堵住出口举起刀：「让我看看你有多想带走这小妞。」", "en": "Scorpion blocks the exit and raises his knife. \"Show me how badly you want to take her out of here.\"" },
+      "choices": [
+        {
+          "label": { "zh": "单挑", "en": "Fight him alone" },
+          "text": { "zh": "身上多了几道口子，但想到苏晴的伤我爆发了一下把蝎子打飞吐血倒地。", "en": "He opens me up in a few places. Then I think of Su Qing's bruises — and something snaps. I send Scorpion flying, spitting blood." },
+          "effects": { "life": -2, "stamina": 0, "mood": 3, "supplies": 0 },
+          "bonusIf": { "item": "medkit", "bonus": { "life": 2, "stamina": 0, "mood": 0, "supplies": 0 } }
+        },
+        {
+          "label": { "zh": "和林夕夹攻", "en": "Double-team him with Lin Xi" },
+          "text": { "zh": "林夕射箭扎他大腿我踹翻他没怎么受伤，但这狗东西没打死我心里不痛快。", "en": "Lin Xi puts an arrow in his thigh and I kick him over. Barely a scratch on me — but the fact that he's still breathing sits wrong." },
+          "effects": { "life": 1, "stamina": 0, "mood": -1, "supplies": 0 }
+        }
+      ]
+    },
+    {
+      "id": 67,
+      "type": "story",
+      "text": { "zh": "跑出铁皮房，喇叭里传来赵铁的声音：「今天算你们走运，我迟早会找到你。」", "en": "We burst out of the iron room. Zhao Tie's voice crackles over a loudspeaker: \"You got lucky today. I'll find you eventually.\"" }
+    },
+    {
+      "id": 68,
+      "type": "story",
+      "text": { "zh": "冲出工厂，苏晴虚弱但还在笑，小萌抱着她不撒手，林夕回头又朝工厂射了一箭。", "en": "We clear the factory gates. Su Qing is weak but still smiling. Xiaomeng won't let go of her. Lin Xi turns and fires one more bolt back at the building." }
+    },
+    {
+      "id": 69,
+      "type": "story",
+      "text": { "zh": "然后我看到了——北方地平线亮起一簇电灯光，不是火光，是文明的光。曙光营地，到了。\n\n—— 第一章 · 完 ——", "en": "And then I see it.\n\nOn the northern horizon, a cluster of electric lights. Not fire. Not flames. The light of civilization.\n\nDawn Camp. We made it.\n\n—— Chapter 1 · End ——" }
+    }
+  ]
+}

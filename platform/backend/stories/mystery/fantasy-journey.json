@@ -1,0 +1,187 @@
+{
+  "id": "fantasy",
+  "title": { "zh": "青云问道", "en": "Path to Immortality" },
+  "description": {
+    "zh": "灵根测试大会上，你本是个废柴。却在测试石上，唤醒了前世剑尊的记忆。修仙之路，由此展开。",
+    "en": "At the Spirit Root Ceremony, you were nothing but a failure. Until the test stone shattered — and the memories of a past-life Sword Sovereign awoke within you."
+  },
+  "type": "mystery",
+  "statDefs": {},
+  "itemDefs": {},
+  "cards": [
+    {
+      "id": 0,
+      "type": "story",
+      "act": { "zh": "第一章 废物灵根", "en": "Chapter 1: The Worthless Root" },
+      "text": { "zh": "青云宗，十年一度的测灵大会正在进行。", "en": "At the Qingyun Sect, the once-a-decade Spirit Root Ceremony is underway." }
+    },
+    {
+      "id": 1,
+      "type": "story",
+      "text": { "zh": "你叫李逍遥，是个外门杂役，今天是你最后的机会。", "en": "Your name is Li Xiaoyao — an outer-sect servant. Today is your last chance." }
+    },
+    {
+      "id": 2,
+      "type": "story",
+      "text": { "zh": "「李逍遥，上前测灵！」长老冷冷地喊道。", "en": "\"Li Xiaoyao, step forward for the test!\" an elder calls out, his voice cold and indifferent." }
+    },
+    {
+      "id": 3,
+      "type": "story",
+      "text": { "zh": "你将手放在测灵石上，石头毫无反应。周围传来一阵哄笑。", "en": "You press your hand against the Spirit Test Stone. Nothing happens. Laughter ripples through the crowd." }
+    },
+    {
+      "id": 4,
+      "type": "story",
+      "text": { "zh": "「果然是个废物，连五系杂灵根都不如。」", "en": "\"Just as expected — a waste. Not even worth a five-element mixed root.\"" }
+    },
+    {
+      "id": 5,
+      "type": "choice",
+      "text": { "zh": "面对嘲笑，你感觉胸口有一团火在烧。你要怎么做？", "en": "Surrounded by mockery, a fire burns in your chest. What do you do?" },
+      "optA": { "zh": "低头认命，默默退下", "en": "Bow your head and quietly step back" },
+      "optB": { "zh": "握紧拳头，死死盯着测灵石", "en": "Clench your fist and glare at the test stone" },
+      "correct": "B",
+      "penalty": { "zh": "你低头退下，彻底沦为杂役，三年后因劳累过度死在后山。", "en": "You bow and retreat, condemned to servitude. Three years later, you die of exhaustion on the back mountain." },
+      "hint": { "zh": "修仙本就是逆天而行，岂能轻言放弃！", "en": "The path of cultivation defies heaven itself — how could you give up so easily!" }
+    },
+    {
+      "id": 6,
+      "type": "story",
+      "text": { "zh": "你死死盯着测灵石，体内的不甘化作一股力量冲击掌心。", "en": "You stare down the stone. The refusal to accept defeat surges through your palm like a current." }
+    },
+    {
+      "id": 7,
+      "type": "story",
+      "text": { "zh": "突然，测灵石咔嚓一声，裂开了一道缝隙。", "en": "With a sharp crack, a fissure splits across the Spirit Test Stone." }
+    },
+    {
+      "id": 8,
+      "type": "story",
+      "text": { "zh": "一道刺目的紫光从裂缝中冲天而起，直入云霄！", "en": "A blinding violet light erupts from the crack, shooting straight into the sky!" }
+    },
+    {
+      "id": 9,
+      "type": "story",
+      "text": { "zh": "「这这是传说中的极品天雷灵根！」长老惊恐地大喊。", "en": "\"This — this is the legendary Supreme Heavenly Thunder Root!\" the elder shouts in disbelief." }
+    },
+    {
+      "id": 10,
+      "type": "story",
+      "text": { "zh": "与此同时，你的脑海中涌入了一段不属于你的记忆。", "en": "At that same moment, a flood of memories — not your own — pours into your mind." }
+    },
+    {
+      "id": 11,
+      "type": "story",
+      "act": { "zh": "第二章 剑尊觉醒", "en": "Chapter 2: The Sword Sovereign Awakens" },
+      "text": { "zh": "「吾乃紫霆剑尊，三千年前陨落于天劫」", "en": "\"I am the Purple Thunder Sword Sovereign, fallen to the Heaven's Tribulation three thousand years ago.\"" }
+    },
+    {
+      "id": 12,
+      "type": "story",
+      "text": { "zh": "你明白了，这极品天雷灵根，正是剑尊的本源力量。", "en": "You understand now — this Supreme Thunder Root is the Sword Sovereign's primordial power, dormant within you." }
+    },
+    {
+      "id": 13,
+      "type": "story",
+      "text": { "zh": "宗主亲自出面，破格收你为亲传弟子，赐予你无数修炼资源。", "en": "The Sect Master appears in person and takes you as a direct disciple, granting you cultivation resources beyond measure." }
+    },
+    {
+      "id": 14,
+      "type": "story",
+      "text": { "zh": "但你也引来了其他弟子的嫉妒，尤其是大师兄赵无极。", "en": "But your rise draws envy from your fellow disciples — none more so than the head senior brother, Zhao Wuji." }
+    },
+    {
+      "id": 15,
+      "type": "story",
+      "text": { "zh": "三个月后，宗门大比开始。赵无极在擂台上向你发起了生死挑战。", "en": "Three months later, the Sect Tournament begins. Zhao Wuji steps onto the arena and issues you a life-or-death challenge." }
+    },
+    {
+      "id": 16,
+      "type": "choice",
+      "text": { "zh": "赵无极是筑基后期，而你才刚刚突破筑基初期。是否应战？", "en": "Zhao Wuji is at the late Foundation stage; you have only just broken through to the early stage. Do you accept?" },
+      "optA": { "zh": "暂避锋芒，拒绝挑战", "en": "Avoid the confrontation and decline" },
+      "optB": { "zh": "剑修当一往无前，接下挑战！", "en": "A sword cultivator never retreats — accept the challenge!" },
+      "correct": "B",
+      "penalty": { "zh": "你退缩了，道心受损，修为再无寸进。", "en": "You back down. Your Dao-heart cracks, and your cultivation stagnates forever." },
+      "hint": { "zh": "剑尊的骄傲不容退缩！", "en": "The pride of the Sword Sovereign permits no retreat!" }
+    },
+    {
+      "id": 17,
+      "type": "story",
+      "text": { "zh": "你跃上擂台，拔出宗门赐予的精钢剑。", "en": "You leap onto the arena and draw the tempered steel sword granted by the sect." }
+    },
+    {
+      "id": 18,
+      "type": "story",
+      "text": { "zh": "赵无极冷笑一声，祭出他的上品灵器飞剑，化作一道长虹直逼你的面门。", "en": "Zhao Wuji sneers and unleashes his high-grade spirit sword, which streaks toward your face like a bolt of lightning." }
+    },
+    {
+      "id": 19,
+      "type": "story",
+      "text": { "zh": "速度太快了！你根本无法躲避。", "en": "It is impossibly fast. There is no time to dodge." }
+    },
+    {
+      "id": 20,
+      "type": "choice",
+      "text": { "zh": "危机时刻，你脑海中闪过剑尊的记忆。你该用哪一招？", "en": "In the critical instant, the Sword Sovereign's memories flash through your mind. Which technique do you use?" },
+      "optA": { "zh": "紫霆万钧：调动全身灵力硬抗", "en": "Purple Thunder Fortress: channel all your spiritual energy into a direct block" },
+      "optB": { "zh": "惊雷一闪：放弃防御，全力突刺", "en": "Thunderclap Flash: abandon defense and thrust with everything you have" },
+      "correct": "B",
+      "penalty": { "zh": "你灵力不敌，被飞剑穿心而过。", "en": "Your spiritual energy is outmatched. The flying sword pierces your heart." },
+      "hint": { "zh": "进攻是最好的防守，雷电的速度无人能及！", "en": "The best defense is offense — and no one can outrun lightning!" }
+    },
+    {
+      "id": 21,
+      "type": "story",
+      "text": { "zh": "你不退反进，化作一道紫色闪电，瞬间穿透了赵无极的防御。", "en": "Instead of retreating, you surge forward — becoming a bolt of violet lightning that punches clean through Zhao Wuji's defense." }
+    },
+    {
+      "id": 22,
+      "type": "story",
+      "text": { "zh": "精钢剑停在了他的咽喉处。他输了。", "en": "Your blade stops at his throat. He has lost." }
+    },
+    {
+      "id": 23,
+      "type": "story",
+      "act": { "zh": "第三章 危机降临", "en": "Chapter 3: Danger Descends" },
+      "text": { "zh": "你的名声传遍了整个修仙界，但也引来了邪修的注意。", "en": "Your name spreads across the entire cultivation world — and with it comes the attention of the demonic sects." }
+    },
+    {
+      "id": 24,
+      "type": "story",
+      "text": { "zh": "一天夜里，血煞宗的刺客潜入青云宗，目标正是你。", "en": "One night, assassins from the Blood Fiend Sect slip into the Qingyun Sect. Their target is you." }
+    },
+    {
+      "id": 25,
+      "type": "story",
+      "text": { "zh": "三名金丹期的杀手将你团团包围。", "en": "Three Golden Core assassins close in and surround you." }
+    },
+    {
+      "id": 26,
+      "type": "choice",
+      "text": { "zh": "面对绝境，你感受到体内有一股狂暴的力量在蠢蠢欲动。", "en": "Cornered, you feel a wild and violent power stirring inside you, desperate to break free." },
+      "optA": { "zh": "强行解开剑尊的全部封印", "en": "Forcibly unseal all of the Sword Sovereign's power at once" },
+      "optB": { "zh": "利用地形和雷系功法周旋", "en": "Use the terrain and your thunder techniques to outmaneuver them" },
+      "correct": "B",
+      "penalty": { "zh": "你的肉体无法承受全部封印解开的力量，爆体而亡。", "en": "Your body cannot contain the full force of the unsealed power. You are torn apart from within." },
+      "hint": { "zh": "循序渐进才是正道。", "en": "The true path is steady and measured — one step at a time." }
+    },
+    {
+      "id": 27,
+      "type": "story",
+      "text": { "zh": "你利用雷法的速度在树林中穿梭，将杀手们逐个击破。", "en": "You weave through the forest at thunder speed, picking off the assassins one by one." }
+    },
+    {
+      "id": 28,
+      "type": "story",
+      "text": { "zh": "最后一名杀手倒下时，天空中劫云密布。你要结丹了！", "en": "As the last assassin falls, tribulation clouds gather overhead. Your Golden Core is forming!" }
+    },
+    {
+      "id": 29,
+      "type": "victory",
+      "act": { "zh": "尾声", "en": "Epilogue" },
+      "text": { "zh": "九道天雷劈下，你浴火重生，成就最强金丹！\n\n紫霆剑尊的传说，才刚刚开始。", "en": "Nine bolts of heavenly thunder strike down. You are reborn through the fire and forge the most powerful Golden Core in an age.\n\nThe legend of the Purple Thunder Sword Sovereign has only just begun." }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+const zh = {
+  nav: {
+    home: '游戏库',
+    createStory: '创作故事',
+    login: '登录',
+    register: '注册',
+    logout: '退出',
+  },
+  home: {
+    title: '轻几互动小说',
+    subtitle: 'OpenStory · 在故事里，每一步都是你的选择',
+    mystery: '解谜推理',
+    numeric: '数值选择',
+    play: '开始游戏',
+    all: '全部',
+  },
+  game: {
+    loading: '加载中...',
+    error: '加载失败',
+    back: '返回',
+  },
+  auth: {
+    username: '用户名',
+    email: '邮箱',
+    password: '密码',
+    login: '登录',
+    register: '注册',
+    loginTitle: '登录账号',
+    registerTitle: '创建账号',
+    noAccount: '没有账号？',
+    hasAccount: '已有账号？',
+    registerLink: '立即注册',
+    loginLink: '去登录',
+    error: '操作失败，请重试',
+  },
+  story: {
+    create: '创建故事',
+    titleZh: '故事标题（中文）',
+    titleEn: '故事标题（英文，选填）',
+    genre: '类型',
+    mystery: '解谜推理',
+    numeric: '数值选择',
+    addChapter: '添加章节',
+    outline: '章节大纲',
+    generate: 'AI 生成内容',
+    generating: '生成中...',
+    noStories: '还没有故事，去创建一个吧！',
+    chapters: '章节',
+    status: {
+      draft: '草稿',
+      generating: '生成中',
+      published: '已发布',
+    },
+  },
+  common: {
+    submit: '提交',
+    cancel: '取消',
+    save: '保存',
+    delete: '删除',
+    loading: '加载中...',
+    error: '出错了',
+  },
+};
+
+export default zh;
+export type I18nKeys = typeof zh;

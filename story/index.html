@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>华北特快·疑云</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #0A0A0F; }
+        #root { height: 100vh; width: 100vw; }
+    </style>
+    <!-- React 18 & ReactDOM 18 -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel Standalone -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+    /**
+     * 加载 mystery-card-game.jsx，使用 Babel 在浏览器中编译并运行。
+     * 
+     * 原始 JSX 文件使用了 ES Module 语法（import/export），
+     * Babel 编译后会转为 CommonJS 的 require/exports，
+     * 我们在这里提供这些全局函数的实现。
+     */
+
+    // 模拟 require()：将模块名映射到全局变量
+    window.require = function(mod) {
+        if (mod === 'react') return window.React;
+        if (mod === 'react-dom') return window.ReactDOM;
+        throw new Error('Cannot find module: ' + mod);
+    };
+
+    // 用 fetch 加载 JSX 源码，用 Babel 编译，然后执行并挂载
+    fetch('mystery-card-game.jsx')
+        .then(function(res) {
+            if (!res.ok) throw new Error('Failed to load mystery-card-game.jsx: ' + res.status);
+            return res.text();
+        })
+        .then(function(jsxCode) {
+            // 用 Babel 将 JSX + ES Module 语法编译为浏览器可执行的 JS
+            var compiled = Babel.transform(jsxCode, {
+                presets: ['react', 'env'],
+                plugins: ['proposal-optional-chaining']
+            }).code;
+
+            // 准备 CommonJS 模块环境
+            var moduleExports = {};
+            var moduleObj = { exports: moduleExports };
+
+            // 将编译后的代码包装在函数中执行，注入 require/module/exports
+            var fn = new Function('require', 'module', 'exports', compiled);
+            fn(window.require, moduleObj, moduleExports);
+
+            // 获取导出的 App 组件
+            var App = moduleObj.exports.default || moduleObj.exports;
+
+            // 挂载 React 应用
+            var root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(React.createElement(App));
+        })
+        .catch(function(err) {
+            console.error(err);
+            document.getElementById('root').innerHTML =
+                '<div style="color:#C9A84C;text-align:center;padding:40px;font-family:serif;">' +
+                '<h2>加载失败</h2><p>' + err.message + '</p>' +
+                '<p style="opacity:0.6;font-size:0.85rem;">请确保通过 HTTP 服务器（而非 file:// 协议）打开此页面。<br/>' +
+                '例如：npx serve 或 python -m http.server</p></div>';
+        });
+    </script>
+</body>
+</html>

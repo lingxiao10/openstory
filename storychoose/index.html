@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>末日抉择 - 末世生存文字游戏</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 引入 React, ReactDOM 和 Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Noto Serif SC', 'STSong', serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #root {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- 加载游戏逻辑 -->
+    <script type="text/babel" src="game.jsx"></script>
+
+    <!-- 渲染游戏 -->
+    <script type="text/babel">
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        // 注意：在 game.jsx 中我们将 ApocalypseGame 改为了非 export 函数
+        root.render(<ApocalypseGame />);
+    </script>
+</body>
+</html>

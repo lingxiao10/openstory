@@ -1,0 +1,124 @@
+import { v4 as uuidv4 } from 'uuid';
+import { StoryModel } from '../models/StoryModel';
+import { Story, Chapter } from '../types';
+import { TranslateService } from './TranslateService';
+
+export class StoryService {
+  /**
+   * Create a story from user-supplied single-language title/background.
+   * TranslateService auto-detects the language and produces the other language.
+   */
+  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '') {
+    const [titleResult, bgResult] = await Promise.all([
+      TranslateService.detectAndTranslate(title),
+      background ? TranslateService.detectAndTranslate(background) : Promise.resolve({ zh: '', en: '' }),
+    ]);
+
+    const id = uuidv4();
+    const story: Omit<Story, 'created_at'> = {
+      id,
+      user_id: userId,
+      title_zh: titleResult.zh,
+      title_en: titleResult.en,
+      background_zh: bgResult.zh,
+      background_en: bgResult.en,
+      genre,
+      status: 'draft',
+    };
+    await StoryModel.create(story);
+    return id;
+  }
+
+  static async getUserStories(userId: string) {
+    const stories = await StoryModel.findByUserId(userId);
+    const result = [];
+    for (const s of stories) {
+      const chapters = await StoryModel.getChapters(s.id);
+      result.push({ ...s, chapters });
+    }
+    return result;
+  }
+
+  static async getStory(id: string, userId: string) {
+    const story = await StoryModel.findById(id);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+    const chapters = await StoryModel.getChapters(id);
+    return { ...story, chapters };
+  }
+
+  /**
+   * Add a chapter with user-supplied single-language outline.
+   * TranslateService produces the other language version.
+   */
+  static async addChapter(storyId: string, userId: string, outline: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+
+    const outlineResult = await TranslateService.detectAndTranslate(outline);
+
+    const chapters = await StoryModel.getChapters(storyId);
+    const chapter_num = chapters.length + 1;
+    const id = uuidv4();
+    const chapter: Chapter = {
+      id,
+      story_id: storyId,
+      chapter_num,
+      outline_zh: outlineResult.zh,
+      outline_en: outlineResult.en,
+      content_zh: '',
+      content_en: '',
+      is_generated: false,
+      published: false,
+      published_at: null,
+    };
+    await StoryModel.createChapter(chapter);
+    return id;
+  }
+
+  static async deleteChapter(storyId: string, chapterId: string, userId: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+
+    const chapter = await StoryModel.findChapterById(chapterId);
+    if (!chapter) throw new Error('Chapter not found');
+    if (chapter.published) throw new Error('Cannot delete a published chapter');
+
+    await StoryModel.deleteChapter(chapterId);
+    await StoryModel.renumberChapters(storyId);
+  }
+
+  static async publishChapter(storyId: string, chapterId: string, userId: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+
+    const chapter = await StoryModel.findChapterById(chapterId);
+    if (!chapter) throw new Error('Chapter not found');
+    if (!chapter.is_generated) throw new Error('Chapter must be generated before publishing');
+    if (chapter.published) throw new Error('Chapter already published');
+
+    // Enforce sequential publishing
+    const chapters = await StoryModel.getChapters(storyId);
+    if (chapter.chapter_num > 1) {
+      const prev = chapters.find(c => c.chapter_num === chapter.chapter_num - 1);
+      if (!prev || !prev.published) throw new Error('Previous chapter must be published first');
+    }
+
+    await StoryModel.updateChapter(chapterId, { published: true, published_at: new Date() });
+    await StoryModel.updateStatus(storyId, 'published');
+  }
+
+  static async getPublicStories() {
+    return StoryModel.getPublicStories();
+  }
+
+  static async getPublicStory(storyId: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    const chapters = await StoryModel.getPublishedChapters(storyId);
+    return { ...story, chapters };
+  }
+}
