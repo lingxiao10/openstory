@@ -1,11 +1,12 @@
 import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
+import { secret } from './secretConfig';
 
-const DB_HOST = process.env.DB_HOST || 'localhost';
-const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306;
-const DB_USER = process.env.DB_USER || 'root';
-const DB_PASSWORD = process.env.DB_PASSWORD || '123456';
+const DB_HOST = secret.db?.host || 'localhost';
+const DB_PORT = secret.db?.port || 3306;
+const DB_USER = secret.db?.user || 'root';
+const DB_PASSWORD = secret.db?.password || '123456';
 
 async function initDb() {
   const connection = await mysql.createConnection({
