@@ -5,6 +5,7 @@ export interface User {
   password_hash: string;
   lang: 'zh' | 'en';
   created_at: Date;
+  daily_quota?: number | null;
 }
 
 export interface Story {

@@ -43,6 +43,7 @@ export class StoryService {
           content_en: '',
           content_json: null,
           is_generated: false,
+          generating_at: null,
           published: false,
           published_at: null,
         };
@@ -95,6 +96,7 @@ export class StoryService {
       content_en: '',
       content_json: null,
       is_generated: false,
+      generating_at: null,
       published: false,
       published_at: null,
     };
