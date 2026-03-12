@@ -34,6 +34,9 @@ function fixJson(s: string): string {
 const GENERATE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export class AIService {
+  /** 当前正在生成的章节流式文本，key=chapterId */
+  static readonly genProgress = new Map<string, string>();
+
   /** Check sequential constraint (throws if violated). Called before responding to client. */
   static async validateSequential(storyId: string, chapterId: string): Promise<void> {
     const chapter = await StoryModel.findChapterById(chapterId);
@@ -92,9 +95,10 @@ export class AIService {
       const t1 = Date.now();
       const totalChapters = allChapters.length;
       const chapterNum = chapter.chapter_num;
+      AIService.genProgress.set(chapterId, '');
       const jsonStr = story.genre === 'numeric'
-      ? await AIService.generateNumericJson(story, chapter.outline_zh, chapter.outline_en, prevChapters, chapterNum, totalChapters)
-      : await AIService.generateInteractiveJson(story, chapter.outline_zh, chapter.outline_en, prevChapters, chapterNum, totalChapters);
+      ? await AIService.generateNumericJson(story, chapter.outline_zh, chapter.outline_en, prevChapters, chapterNum, totalChapters, chapterId)
+      : await AIService.generateInteractiveJson(story, chapter.outline_zh, chapter.outline_en, prevChapters, chapterNum, totalChapters, chapterId);
       logger.info(`[Generate] AI done in ${((Date.now() - t1) / 1000).toFixed(1)}s, jsonLen=${jsonStr.length}`);
 
       await StoryModel.updateChapter(chapterId, {
@@ -114,6 +118,8 @@ export class AIService {
         generating_at: null,
       });
       throw err;
+    } finally {
+      AIService.genProgress.delete(chapterId);
     }
   }
 
@@ -187,6 +193,7 @@ export class AIService {
     prevChapters: { chapter_num: number; outline_zh: string; content_json: string | null }[] = [],
     chapterNum = 1,
     totalChapters = 1,
+    progressKey?: string,
   ): Promise<string> {
     let prevContext = '';
     if (prevChapters.length > 0) {
@@ -266,7 +273,7 @@ ${prevContext}
 
 输出：`;
 
-    const raw = await AIService.callAI(prompt, 'ark', 16000, 'deepseek-v3-2-251201');
+    const raw = await AIService.callAI(prompt, 'ark', 16000, 'deepseek-v3-2-251201', progressKey);
     logger.info(`[NumericJson] raw length=${raw.length}, preview="${raw.slice(0, 120).replace(/\n/g, '↵')}"`);
     let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     cleaned = cleaned.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F]/g, ' ');
@@ -316,6 +323,7 @@ ${prevContext}
     prevChapters: { chapter_num: number; outline_zh: string; content_json: string | null }[] = [],
     chapterNum = 1,
     totalChapters = 1,
+    progressKey?: string,
   ): Promise<string> {
 
     // 构建前情上下文
@@ -366,7 +374,7 @@ JSON 格式规则：
 输出：`;
 
     // deepseek-v3 对结构化 JSON 输出更精准
-    const raw = await AIService.callAI(prompt, 'ark', 6000, 'deepseek-v3-2-251201');
+    const raw = await AIService.callAI(prompt, 'ark', 6000, 'deepseek-v3-2-251201', progressKey);
     logger.info(`[InteractiveJson] raw length=${raw.length}, preview="${raw.slice(0, 120).replace(/\n/g, '↵')}"`);
 
     // 清理 markdown 包裹和控制字符
@@ -416,7 +424,7 @@ JSON 格式规则：
     );
   }
 
-  static async callAI(prompt: string, provider: 'ark' | 'openrouter' = 'ark', maxTokens = 1000, model?: string): Promise<string> {
+  static async callAI(prompt: string, provider: 'ark' | 'openrouter' = 'ark', maxTokens = 1000, model?: string, progressKey?: string): Promise<string> {
     if (provider === 'ark') {
       const arkClient = new ArkClient(config.ai.apiKey, config.ai.baseUrl);
       const slog = createStreamLogger(model?.split('-')[0] ?? 'ark');
@@ -433,6 +441,7 @@ JSON 格式规则：
             temperature: 0.8,
             timeoutMs: 180000,
             onChunk: (_delta, total) => {
+              if (progressKey) AIService.genProgress.set(progressKey, total);
               if (total.length - lastLogAt >= 200) {
                 lastLogAt = total.length;
                 slog.info(`received ${total.length} chars so far...`);

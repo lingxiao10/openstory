@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function GenModal({ lang, onOne, onAll, showAll, onClose }: {
@@ -53,6 +53,7 @@ import { Layout } from '../components/Layout';
 import { AuthContext } from '../store/authStore';
 import { queryWork } from '../api/queryWork';
 import { useI18n } from '../i18n';
+import { translations } from '../i18n/translations';
 
 const GENERATE_TIMEOUT_MS = 5 * 60 * 1000; // must match backend
 
@@ -84,7 +85,7 @@ interface Story {
 }
 
 const CHAPTER_COUNT_MIN = 1;
-const CHAPTER_COUNT_MAX = 10;
+const CHAPTER_COUNT_MAX = 5;
 
 export function MyStories() {
   const { token, isLoggedIn } = useContext(AuthContext);
@@ -194,6 +195,36 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
   const [err, setErr] = useState('');
   const [toast, setToast] = useState(false);
   const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [genText, setGenText] = useState('');
+  const [genBoxVisible, setGenBoxVisible] = useState(false);
+  const genPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 轮询 AI 流式进度，显示在右下角消息框
+  useEffect(() => {
+    if (generating) {
+      if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = null; }
+      setGenBoxVisible(true);
+      genPollRef.current = setInterval(async () => {
+        try {
+          const data = await queryWork<{ text: string | null; chars: number }>(
+            `/api/generate/${story.id}/${generating}/progress`, { token }
+          );
+          if (data.text != null) setGenText(data.text);
+        } catch { /* ignore */ }
+      }, 800);
+    } else {
+      if (genPollRef.current) { clearInterval(genPollRef.current); genPollRef.current = null; }
+      // 生成结束：1秒后关闭消息框
+      hideTimerRef.current = setTimeout(() => {
+        setGenBoxVisible(false);
+        setGenText('');
+      }, 1000);
+    }
+    return () => {
+      if (genPollRef.current) { clearInterval(genPollRef.current); genPollRef.current = null; }
+    };
+  }, [generating]);
 
   const showToast = () => {
     setToast(true);
@@ -297,7 +328,10 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
     try {
       await queryWork(`/api/stories/${story.id}/chapters/${ch.id}/publish`, { method: 'POST', token });
       onRefresh();
-    } catch (e: any) { setErr(e.message); }
+    } catch (e: any) {
+      const key = e.code ? `err_${e.code}` : null;
+      setErr(key && key in translations ? t(key as any) : e.message);
+    }
   };
 
   const unpublish = async (ch: Chapter) => {
@@ -318,6 +352,33 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
           letterSpacing: 0.5,
         }}>
           ⚡ {lang === 'zh' ? '生成中...离开本页面将会在云端继续生成' : 'Generating... It will continue in the cloud if you leave.'}
+        </div>
+      )}
+
+      {genBoxVisible && (
+        <div style={{
+          position: 'fixed', bottom: 20, right: 20,
+          background: '#0f172a', border: '1px solid #6366f155',
+          borderRadius: 12, padding: '10px 14px',
+          width: 280, maxHeight: 180, zIndex: 9998,
+          boxShadow: '0 4px 20px #00000066',
+          display: 'flex', flexDirection: 'column', gap: 6,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#6366f1', fontSize: 11, fontWeight: 700 }}>
+              ⚡ {lang === 'zh' ? 'AI 生成中' : 'AI Generating'}
+            </span>
+            <span style={{ color: '#475569', fontSize: 11 }}>
+              {genText.length} {lang === 'zh' ? '字' : 'chars'}
+            </span>
+          </div>
+          <div style={{
+            color: '#64748b', fontSize: 11, lineHeight: 1.6,
+            overflow: 'hidden', maxHeight: 130,
+            wordBreak: 'break-all', whiteSpace: 'pre-wrap',
+          }}>
+            {genText.length > 0 ? genText.slice(-300) : (lang === 'zh' ? '等待 AI 响应...' : 'Waiting for AI...')}
+          </div>
         </div>
       )}
 
@@ -404,7 +465,12 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
           </div>
 
           {/* Add chapter */}
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, marginTop: 16 }}>
+          {story.chapters.length >= 5 && (
+            <p style={{ color: '#64748b', fontSize: 12, marginTop: 16, textAlign: 'center' }}>
+              {lang === 'zh' ? '最多支持 5 个章节' : 'Maximum 5 chapters allowed'}
+            </p>
+          )}
+          {story.chapters.length < 5 && <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, marginTop: 16 }}>
             <input
               placeholder={t('story_outline')} value={outline}
               onChange={e => setOutline(e.target.value)}
@@ -415,7 +481,7 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
             <button onClick={addChapter} disabled={anyBusy} style={{ ...btnStyle, opacity: anyBusy ? 0.5 : 1, width: isMobile ? '100%' : 'auto' }}>
               {addingChapter ? (lang === 'zh' ? 'AI翻译中...' : 'Translating...') : t('story_addChapter')}
             </button>
-          </div>
+          </div>}
         </div>
       )}
     </div>

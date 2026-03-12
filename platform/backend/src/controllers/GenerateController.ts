@@ -5,6 +5,12 @@ import { QuotaService } from '../services/QuotaService';
 const generatingSet = new Set<string>();
 
 export class GenerateController {
+  static progress(req: Request, res: Response) {
+    const { chapterId } = req.params;
+    const text = AIService.genProgress.get(chapterId) ?? null;
+    res.json({ text, chars: text?.length ?? 0 });
+  }
+
   static async generate(req: Request, res: Response) {
     try {
       const { storyId, chapterId } = req.params;
