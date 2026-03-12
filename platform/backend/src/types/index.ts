@@ -27,7 +27,9 @@ export interface Chapter {
   outline_en: string;
   content_zh: string;
   content_en: string;
+  content_json: string | null;
   is_generated: boolean;
+  generating_at: Date | null;
   published: boolean;
   published_at: Date | null;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useI18n } from '../../i18n';
 import { BilingualText } from '../../i18n/translations';
 
@@ -24,6 +24,7 @@ interface GameData {
 
 interface Props {
   gameData: GameData;
+  onVictory?: () => void;
 }
 
 const S = {
@@ -94,16 +95,26 @@ const S = {
   },
 };
 
-export function MysteryEngine({ gameData }: Props) {
+export function MysteryEngine({ gameData, onVictory }: Props) {
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<'A' | 'B' | number | null>(null);
   const [feedback, setFeedback] = useState('');
   const [wrong, setWrong] = useState(false);
-  const { tf, lang } = useI18n();
+  const { t, tf, lang } = useI18n();
 
   const data = gameData.cards;
   const card = data[index] as Card;
   if (!card) return null;
+
+  // Randomize A/B order once per card (re-randomized each time this card index is reached)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const shuffledAB = useMemo(() => {
+    if (card.type !== 'choice' || !card.optA) return null;
+    const swap = Math.random() < 0.5;
+    if (!swap) return { optA: card.optA, optB: card.optB, correct: card.correct };
+    return { optA: card.optB, optB: card.optA, correct: card.correct === 'A' ? ('B' as const) : ('A' as const) };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
 
   const advance = () => {
     setIndex(i => Math.min(i + 1, data.length - 1));
@@ -135,12 +146,13 @@ export function MysteryEngine({ gameData }: Props) {
   };
 
   const handleOptAB = (opt: 'A' | 'B') => {
+    const correct = shuffledAB?.correct ?? card.correct;
     setSelectedOption(opt);
-    if (opt === card.correct) {
-      setFeedback('✓ ' + (tf(card.hint) || (lang === 'en' ? 'Correct!' : '正确！')));
+    if (opt === correct) {
+      setFeedback('✓ ' + (tf(card.hint) || t('game_correct')));
       setWrong(false);
     } else {
-      setFeedback('✗ ' + (tf(card.penalty) || (lang === 'en' ? 'Wrong, try again.' : '选错了，继续推理。')));
+      setFeedback('✗ ' + (tf(card.penalty) || t('game_wrong')));
       setWrong(true);
     }
   };
@@ -173,45 +185,48 @@ export function MysteryEngine({ gameData }: Props) {
       )}
 
       {/* optA/optB format */}
-      {card.type === 'choice' && card.optA && (
+      {card.type === 'choice' && card.optA && shuffledAB && (
         <>
           <p style={S.storyText}>{tf(card.text)}</p>
           {(['A', 'B'] as const).map(opt => (
             <button
               key={opt}
+              disabled={selectedOption !== null}
               style={{
                 ...S.optionBtn,
-                background: selectedOption === opt ? (opt === card.correct ? '#16a34a22' : '#7f1d1d22') : '#1e293b',
-                borderColor: selectedOption === opt ? (opt === card.correct ? '#22c55e' : '#ef4444') : '#334155',
-                color: selectedOption === opt ? (opt === card.correct ? '#86efac' : '#fca5a5') : '#e2e8f0',
+                background: selectedOption === opt ? (opt === shuffledAB.correct ? '#16a34a22' : '#7f1d1d22') : '#1e293b',
+                borderColor: selectedOption === opt ? (opt === shuffledAB.correct ? '#22c55e' : '#ef4444') : '#334155',
+                color: selectedOption === opt ? (opt === shuffledAB.correct ? '#86efac' : '#fca5a5') : '#e2e8f0',
+                cursor: selectedOption !== null ? 'default' : 'pointer',
+                opacity: selectedOption !== null && selectedOption !== opt ? 0.4 : 1,
               }}
               onClick={() => handleOptAB(opt)}
             >
-              {opt}. {tf(opt === 'A' ? card.optA : card.optB)}
+              {opt}. {tf(opt === 'A' ? shuffledAB.optA : shuffledAB.optB)}
             </button>
           ))}
           {feedback && (
             <div style={{
               padding: '12px 16px', borderRadius: 10, marginTop: 8,
-              background: selectedOption === card.correct ? '#16a34a22' : '#7f1d1d22',
-              color: selectedOption === card.correct ? '#86efac' : '#fca5a5',
+              background: selectedOption === shuffledAB.correct ? '#16a34a22' : '#7f1d1d22',
+              color: selectedOption === shuffledAB.correct ? '#86efac' : '#fca5a5',
               fontSize: 14, lineHeight: 1.7,
             }}>
               {feedback}
             </div>
           )}
-          {selectedOption === card.correct && (
+          {selectedOption === shuffledAB.correct && (
             <button style={{ ...S.nextBtn, marginTop: 16 }} onClick={advance}>
-              {lang === 'en' ? 'Continue' : '继续'}
+              {t('game_continue')}
             </button>
           )}
           {wrong && (
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button style={retryBtnStyle} onClick={goBack10}>
-                {lang === 'en' ? '← Back 10 cards' : '← 回退10张'}
+                {t('game_back10')}
               </button>
               <button style={retryBtnStyle} onClick={restartAct}>
-                {lang === 'en' ? '↺ Restart chapter' : '↺ 重新开始本章'}
+                {t('game_restartAct')}
               </button>
             </div>
           )}
@@ -237,7 +252,7 @@ export function MysteryEngine({ gameData }: Props) {
             </button>
           ))}
           {typeof selectedOption === 'number' && (
-            <button style={S.nextBtn} onClick={getNext}>{lang === 'en' ? 'Confirm' : '确认'}</button>
+            <button style={S.nextBtn} onClick={getNext}>{t('game_confirm')}</button>
           )}
         </>
       )}
@@ -245,24 +260,18 @@ export function MysteryEngine({ gameData }: Props) {
       {(card.type === 'verdict' || card.type === 'victory') && (
         <div style={S.verdict}>
           <div style={{ fontSize: 24, marginBottom: 12 }}>⚖️</div>
-          <h3 style={{ color: '#a5b4fc', marginBottom: 12 }}>{lang === 'en' ? 'VERDICT' : '最终推理'}</h3>
           <p style={{ color: '#e2e8f0', lineHeight: 1.8 }}>{tf(card.verdict || card.text)}</p>
           {index < data.length - 1 && (
             <button style={{ ...S.nextBtn, marginTop: 20 }} onClick={advance}>▶</button>
           )}
+          {index === data.length - 1 && onVictory && (
+            <button style={{ ...S.nextBtn, marginTop: 20, background: '#22c55e' }} onClick={onVictory}>
+              {t('game_completeChapter')}
+            </button>
+          )}
         </div>
       )}
 
-      {/* Progress dots */}
-      <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4 }}>
-        {data.slice(0, Math.min(data.length, 24)).map((_, i) => (
-          <div key={i} style={{
-            width: i === index ? 20 : 6, height: 6, borderRadius: 3,
-            background: i === index ? '#6366f1' : i < index ? '#334155' : '#1e293b',
-            transition: 'all 0.3s',
-          }} />
-        ))}
-      </div>
     </div>
   );
 }

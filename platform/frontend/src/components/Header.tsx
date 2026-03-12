@@ -38,6 +38,9 @@ export function Header() {
         {isLoggedIn ? (
           <>
             <Link to="/my-stories" className="header-create" style={navLinkStyle}>{t('nav_create')}</Link>
+            {user?.isAdmin && (
+              <Link to="/admin" style={{ ...navLinkStyle, color: '#f59e0b', fontWeight: 700 }}>⚙ 后台</Link>
+            )}
             <span className="header-username" style={{ color: '#64748b', fontSize: 13 }}>{user?.username}</span>
             <button onClick={handleLogout} style={btnStyle}>{t('nav_logout')}</button>
           </>

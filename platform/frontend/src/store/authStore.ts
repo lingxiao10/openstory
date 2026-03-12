@@ -5,6 +5,7 @@ interface AuthUser {
   username: string;
   email: string;
   lang: 'zh' | 'en';
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {

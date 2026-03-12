@@ -4,9 +4,10 @@ import { StoryService } from '../services/StoryService';
 export class StoryController {
   static async create(req: Request, res: Response) {
     try {
-      const { title, genre, background } = req.body;
+      const { title, genre, background, chapterCount } = req.body;
       if (!title || !genre) return res.status(400).json({ error: 'Missing required fields' });
-      const id = await StoryService.createStory(req.user!.userId, title, genre, background || '');
+      const count = typeof chapterCount === 'number' ? chapterCount : 0;
+      const id = await StoryService.createStory(req.user!.userId, title, genre, background || '', count);
       res.status(201).json({ id });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -42,6 +43,17 @@ export class StoryController {
     }
   }
 
+  static async updateChapterOutline(req: Request, res: Response) {
+    try {
+      const { outline } = req.body;
+      if (!outline) return res.status(400).json({ error: 'Missing outline' });
+      await StoryService.updateChapterOutline(req.params.id, req.params.chapterId, req.user!.userId, outline);
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
   static async deleteChapter(req: Request, res: Response) {
     try {
       await StoryService.deleteChapter(req.params.id, req.params.chapterId, req.user!.userId);
@@ -54,6 +66,15 @@ export class StoryController {
   static async publishChapter(req: Request, res: Response) {
     try {
       await StoryService.publishChapter(req.params.id, req.params.chapterId, req.user!.userId);
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  static async unpublishChapter(req: Request, res: Response) {
+    try {
+      await StoryService.unpublishChapter(req.params.id, req.params.chapterId, req.user!.userId);
       res.json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });

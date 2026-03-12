@@ -30,13 +30,18 @@ export async function queryWork<T = unknown>(url: string, options: QueryOptions 
 
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}`;
+    let errorCode: string | undefined;
     try {
       const errData = await response.json();
       errorMessage = errData.error || errData.message || errorMessage;
+      errorCode = errData.code;
     } catch {
       // ignore parse error
     }
-    throw new Error(errorMessage);
+    const err: any = new Error(errorMessage);
+    err.status = response.status;
+    err.code = errorCode;
+    throw err;
   }
 
   return response.json() as Promise<T>;

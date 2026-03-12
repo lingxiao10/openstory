@@ -61,8 +61,8 @@ export class StoryModel {
 
   static async createChapter(chapter: Chapter): Promise<void> {
     await pool.execute(
-      'INSERT INTO chapters (id, story_id, chapter_num, outline_zh, outline_en, content_zh, content_en, is_generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [chapter.id, chapter.story_id, chapter.chapter_num, chapter.outline_zh, chapter.outline_en || '', chapter.content_zh, chapter.content_en, chapter.is_generated ? 1 : 0]
+      'INSERT INTO chapters (id, story_id, chapter_num, outline_zh, outline_en, content_zh, content_en, content_json, is_generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [chapter.id, chapter.story_id, chapter.chapter_num, chapter.outline_zh, chapter.outline_en || '', chapter.content_zh, chapter.content_en, chapter.content_json ?? null, chapter.is_generated ? 1 : 0]
     );
   }
 
@@ -71,12 +71,21 @@ export class StoryModel {
     const vals: any[] = [];
     if (fields.content_zh !== undefined) { sets.push('content_zh = ?'); vals.push(fields.content_zh); }
     if (fields.content_en !== undefined) { sets.push('content_en = ?'); vals.push(fields.content_en); }
+    if (fields.content_json !== undefined) { sets.push('content_json = ?'); vals.push(fields.content_json); }
     if (fields.is_generated !== undefined) { sets.push('is_generated = ?'); vals.push(fields.is_generated ? 1 : 0); }
+    if (fields.generating_at !== undefined) { sets.push('generating_at = ?'); vals.push(fields.generating_at); }
     if (fields.published !== undefined) { sets.push('published = ?'); vals.push(fields.published ? 1 : 0); }
     if (fields.published_at !== undefined) { sets.push('published_at = ?'); vals.push(fields.published_at); }
     if (sets.length === 0) return;
     vals.push(id);
     await pool.execute(`UPDATE chapters SET ${sets.join(', ')} WHERE id = ?`, vals);
+  }
+
+  static async updateChapterOutline(id: string, outlineZh: string, outlineEn: string): Promise<void> {
+    await pool.execute(
+      'UPDATE chapters SET outline_zh = ?, outline_en = ? WHERE id = ?',
+      [outlineZh, outlineEn, id]
+    );
   }
 
   static async deleteChapter(id: string): Promise<void> {

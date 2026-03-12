@@ -30,8 +30,12 @@ CREATE TABLE IF NOT EXISTS chapters (
   content_zh TEXT,
   content_en TEXT,
   generated BOOLEAN DEFAULT FALSE,
+  generating_at DATETIME NULL DEFAULT NULL,
   FOREIGN KEY (story_id) REFERENCES stories(id)
 );
 
--- Migration for existing databases:
+-- Migration for existing databases (run migrate.ts):
 -- ALTER TABLE chapters ADD COLUMN outline_en TEXT AFTER outline_zh;
+-- ALTER TABLE chapters ADD COLUMN generating_at DATETIME NULL DEFAULT NULL;
+-- ALTER TABLE users ADD COLUMN daily_quota INT NULL DEFAULT NULL;
+-- CREATE TABLE generation_logs (id INT AUTO_INCREMENT PRIMARY KEY, user_id VARCHAR(36), chapter_id VARCHAR(36), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_user_date (user_id, created_at));

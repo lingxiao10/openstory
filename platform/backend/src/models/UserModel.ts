@@ -32,4 +32,17 @@ export class UserModel {
       [user.id, user.username, user.email, user.password_hash, user.lang]
     );
   }
+
+  static async search(q: string): Promise<User[]> {
+    const like = `%${q}%`;
+    const [rows] = await pool.execute<any[]>(
+      'SELECT * FROM users WHERE id = ? OR username LIKE ? OR email LIKE ? LIMIT 20',
+      [q, like, like]
+    );
+    return rows;
+  }
+
+  static async setDailyQuota(id: string, quota: number | null): Promise<void> {
+    await pool.execute('UPDATE users SET daily_quota = ? WHERE id = ?', [quota, id]);
+  }
 }

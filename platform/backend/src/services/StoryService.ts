@@ -2,13 +2,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { StoryModel } from '../models/StoryModel';
 import { Story, Chapter } from '../types';
 import { TranslateService } from './TranslateService';
+import { AIService } from './AIService';
 
 export class StoryService {
   /**
    * Create a story from user-supplied single-language title/background.
    * TranslateService auto-detects the language and produces the other language.
    */
-  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '') {
+  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '', chapterCount = 0) {
     const [titleResult, bgResult] = await Promise.all([
       TranslateService.detectAndTranslate(title),
       background ? TranslateService.detectAndTranslate(background) : Promise.resolve({ zh: '', en: '' }),
@@ -26,6 +27,29 @@ export class StoryService {
       status: 'draft',
     };
     await StoryModel.create(story);
+
+    if (chapterCount > 0) {
+      const count = Math.min(Math.max(1, chapterCount), 10);
+      const fullStory = { ...story, created_at: new Date() } as Story;
+      const outlines = await AIService.generateStoryOutlines(fullStory, count);
+      for (let i = 0; i < outlines.length; i++) {
+        const chapter: Chapter = {
+          id: uuidv4(),
+          story_id: id,
+          chapter_num: i + 1,
+          outline_zh: outlines[i].zh,
+          outline_en: outlines[i].en,
+          content_zh: '',
+          content_en: '',
+          content_json: null,
+          is_generated: false,
+          published: false,
+          published_at: null,
+        };
+        await StoryModel.createChapter(chapter);
+      }
+    }
+
     return id;
   }
 
@@ -69,12 +93,26 @@ export class StoryService {
       outline_en: outlineResult.en,
       content_zh: '',
       content_en: '',
+      content_json: null,
       is_generated: false,
       published: false,
       published_at: null,
     };
     await StoryModel.createChapter(chapter);
     return id;
+  }
+
+  static async updateChapterOutline(storyId: string, chapterId: string, userId: string, outline: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+
+    const chapter = await StoryModel.findChapterById(chapterId);
+    if (!chapter) throw new Error('Chapter not found');
+    if (chapter.published) throw new Error('Cannot edit a published chapter');
+
+    const result = await TranslateService.detectAndTranslate(outline);
+    await StoryModel.updateChapterOutline(chapterId, result.zh, result.en);
   }
 
   static async deleteChapter(storyId: string, chapterId: string, userId: string) {
@@ -109,6 +147,29 @@ export class StoryService {
 
     await StoryModel.updateChapter(chapterId, { published: true, published_at: new Date() });
     await StoryModel.updateStatus(storyId, 'published');
+  }
+
+  static async unpublishChapter(storyId: string, chapterId: string, userId: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+
+    const chapter = await StoryModel.findChapterById(chapterId);
+    if (!chapter) throw new Error('Chapter not found');
+    if (!chapter.published) throw new Error('Chapter is not published');
+
+    // Only the last published chapter can be unpublished
+    const chapters = await StoryModel.getChapters(storyId);
+    const publishedChapters = chapters.filter(c => c.published);
+    const lastPublished = publishedChapters.reduce((max, c) => c.chapter_num > max.chapter_num ? c : max, publishedChapters[0]);
+    if (lastPublished.id !== chapterId) throw new Error('只能取消发布最后一章 / Only the last published chapter can be unpublished');
+
+    await StoryModel.updateChapter(chapterId, { published: false, published_at: null });
+
+    // If no more published chapters, revert story status to draft
+    if (publishedChapters.length === 1) {
+      await StoryModel.updateStatus(storyId, 'draft');
+    }
   }
 
   static async getPublicStories() {

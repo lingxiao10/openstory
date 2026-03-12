@@ -31,6 +31,37 @@ export function Home() {
 
   return (
     <Layout>
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(139,92,246,0.2), 0 4px 24px rgba(99,102,241,0.2); }
+          50% { box-shadow: 0 0 0 1px rgba(139,92,246,0.45), 0 4px 32px rgba(99,102,241,0.4); }
+        }
+        .generate-btn {
+          animation: pulse-glow 3s ease-in-out infinite;
+          position: relative;
+          overflow: hidden;
+        }
+        .generate-btn::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+          background-size: 200% 100%;
+          animation: shimmer 3.5s linear infinite;
+          border-radius: 14px;
+        }
+        .generate-btn:hover {
+          animation: none;
+          box-shadow: 0 0 0 1px rgba(139,92,246,0.5), 0 8px 32px rgba(99,102,241,0.35) !important;
+        }
+        .generate-btn:hover::after {
+          animation: shimmer 1s linear infinite;
+        }
+      `}</style>
       <div style={{ textAlign: 'center', marginBottom: 48, padding: '24px 0' }}>
         <h1 style={{
           fontSize: 'clamp(32px, 6vw, 56px)',
@@ -43,7 +74,42 @@ export function Home() {
         }}>
           {t('home_title')}
         </h1>
-        <p style={{ color: '#64748b', fontSize: 16 }}>{t('home_subtitle')}</p>
+        <p style={{ color: '#64748b', fontSize: 16, marginBottom: 28 }}>{t('home_subtitle')}</p>
+
+        <button
+          className="generate-btn"
+          onClick={() => navigate('/create')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '14px 36px',
+            borderRadius: 14,
+            border: '1px solid rgba(139,92,246,0.4)',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))',
+            color: '#c4b5fd',
+            fontWeight: 700,
+            fontSize: 16,
+            letterSpacing: 0.5,
+            backdropFilter: 'blur(8px)',
+            transition: 'background 0.25s, color 0.25s',
+          }}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3))';
+            el.style.color = '#ede9fe';
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))';
+            el.style.color = '#c4b5fd';
+          }}
+        >
+          <span style={{ fontSize: 20 }}>✦</span>
+          {lang === 'zh' ? '生成互动小说' : 'Generate Interactive Story'}
+          <span style={{ fontSize: 13, opacity: 0.7, fontWeight: 400 }}>→</span>
+        </button>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
@@ -82,44 +148,6 @@ export function Home() {
         </>
       )}
 
-      {/* Floating AI Generate button */}
-      <div style={{
-        position: 'fixed',
-        bottom: 80,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 100,
-      }}>
-        <button
-          onClick={() => navigate('/create')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '14px 28px',
-            borderRadius: 50,
-            border: 'none',
-            cursor: 'pointer',
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: 15,
-            boxShadow: '0 8px 32px rgba(99,102,241,0.5)',
-            whiteSpace: 'nowrap',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
-            (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px rgba(99,102,241,0.7)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-            (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(99,102,241,0.5)';
-          }}
-        >
-          ✨ {lang === 'zh' ? 'AI 生成游戏' : 'Generate AI Game'}
-        </button>
-      </div>
     </Layout>
   );
 }

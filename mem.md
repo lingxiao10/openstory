@@ -17,7 +17,62 @@
 - `initDb.ts` 读取 `schema.sql`，用 mysql2 multipleStatements 执行
 - 环境变量：DB_HOST/DB_PORT/DB_USER/DB_PASSWORD（默认 localhost/3306/root/123456）
 
+## 新建故事自动生成章节
+- 创建故事时传 `chapterCount`（1-10），后端一次 AI 调用生成所有章节大纲
+- `AIService.generateStoryOutlines(story, count)` → deepseek-v3，maxTokens=8000，返回 `[{zh,en}]`
+- 每章大纲要求详尽 200-300字，交代人物行动/事件/场景/转折
+- `StoryService.createStory(..., chapterCount)` 服务端上限 clamp 到 10
+- 前端滑动条 range 1-10，默认3；创建完成后重置为3
+- 用户手动添加章节功能保留不变
+
+## 生成防重复提交保护 & 状态持久化
+- `chapters.generating_at DATETIME NULL`：生成开始时写入，完成/失败时清空（NULL）
+- 超时5分钟（`GENERATE_TIMEOUT_MS = 5*60*1000`，前后端共用）
+- `validateSequential` 检查 DB generating_at，超时则清空允许重试
+- `GenerateController` 内存 Set 作进程内快速拦截
+- 前端：`isChapterGenerating(ch)` 读 DB 状态；`useEffect` 在刷新后自动恢复轮询
+- `pollUntilDone` 以 `!ch.generating_at` 为完成信号（成功/失败统一）
+- 迁移 SQL：`ALTER TABLE chapters ADD COLUMN generating_at DATETIME NULL DEFAULT NULL;`
+
+## AI 生成章节（互动小说 JSON）
+- `generateChapter` 向子函数传 `chapterNum` 和 `totalChapters`
+- prompt 含 `第N章（共M章）`；非末章注入"绝对不要结束故事"指令；末章注入"必须给出完整结局"指令
+- `AIService.generateChapter` 按 story.genre 分支调用：
+  - mystery → `generateInteractiveJson`：生成数组 `[{id,type,text,...}]`，节点类型 story/choice/victory，choice 含 optA/optB/correct/penalty/hint
+  - numeric → `generateNumericJson`：生成 GameData 对象 `{title,description,statDefs,itemDefs,cards,winText}`，cards 中 choice 节点含 choices 数组（effects/giveItem/bonusIf）
+- statDefs 固定4个：life/stamina/mood/supplies；itemDefs 按章节内容动态定义（0-4个）
+- 互动JSON生成专用模型：`deepseek-v3-2-251201`
+- mystery: maxTokens=6000，节点 30 个内，3-4个choice，story节点一句话≤15字
+- numeric: maxTokens=16000，节点 60 个，8-10个choice，story节点一句话≤15字
+- numeric choice effects：非零值最多3个（通常2-3个）、必须有增有减（数值交换）、8-10个choice均匀覆盖4种属性、关键节点惩罚-3到-4
+- numeric 章节大纲：约1000字（mystery为200-300字）；大纲 maxTokens = count×3000
+- `extractStoryText` 同时支持两种格式（数组 / {cards:[...]}）
+- 前端 `StoryReader.tsx`：mystery 传 `{cards:parsed}`，numeric 直接传解析后 GameData 对象
+
+## 每日生成限额 & 管理后台
+- `secret_json.json`: `daily_gen_limit_enabled`(开关), `daily_gen_limit`(默认10), `admin_email`
+- `generation_logs` 表记录成功生成；`users.daily_quota` 存个人覆盖值（NULL=用系统默认）
+- `QuotaService.check(userId)` 超额抛 `{code:'QUOTA_EXCEEDED'}`，GenerateController 返回 429
+- 前端捕获 429/QUOTA_EXCEEDED → 弹窗显示微信号 linginlove
+- 管理后台: `/admin` 路由，需 `user.isAdmin=true`（登录时后端按 admin_email 判断）
+- 管理后台功能：搜索用户（ID/用户名/邮箱）、查看今日用量、设置个人额度
+- `requireAdmin` 中间件：查 DB 验证邮箱 === config.adminEmail
+
 ## platform 架构
 - backend: `src/server.ts` → `app.ts`，port 3001
-- frontend: Vite，port 5173，`/api` 代理到 3001
-- i18n: `translations.ts` 扁平 key（如 `auth_sendCode`）
+- frontend: Vite，port 5173（被占时自动 5174），`/api` 代理到 3001
+- i18n: `translations.ts` 扁平 key（如 `auth_sendCode`）；所有引擎文字必须用 `t()`，禁用 `lang === 'en' ? ... : ...`
+
+## 游戏引擎 i18n 规范
+- 所有引擎文字通过 `t(key)` 国际化，键前缀 `game_`
+- 章节结束胜利文字：优先读 `gameData.winText`（BilingualText），无则 fallback `t('game_win')` = "你顺利完成了本章。"
+- `winText` 字段在每章节 JSON 中单独配置（numeric engine）
+
+## PM2 服务管理
+- 配置文件：根目录 `ecosystem.config.js`
+- Windows 需用 `script: 'cmd', args: '/c npm run dev'`（直接用 npm 会报 SyntaxError）
+- 常用命令：
+  - `pm2 start ecosystem.config.js` 启动
+  - `pm2 restart all` / `pm2 restart storygame-backend` 重启
+  - `pm2 stop all` 停止
+  - `pm2 list` 查状态，`pm2 logs` 看日志

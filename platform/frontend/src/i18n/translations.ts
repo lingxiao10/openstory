@@ -58,6 +58,8 @@ export const translations = {
   story_status_generating: { zh: '生成中', en: 'Generating' },
   story_status_published:  { zh: '已发布', en: 'Published' },
   story_center:            { zh: 'AI故事中心', en: 'AI Story Hub' },
+  story_chapterCount:      { zh: '章节数', en: 'Chapters' },
+  story_generatingOutline: { zh: 'AI 生成章节大纲中...', en: 'Generating outlines...' },
 
   // reader
   reader_select:    { zh: '选择章节开始阅读', en: 'Select a chapter to start' },
@@ -65,6 +67,22 @@ export const translations = {
   reader_done:      { zh: '已通关',           en: 'Completed' },
   reader_complete:  { zh: '完成本章',         en: 'Complete Chapter' },
   reader_chapters:  { zh: '章',              en: 'ch.' },
+
+  // game engine
+  game_correct:         { zh: '正确！',           en: 'Correct!' },
+  game_wrong:           { zh: '选错了，继续推理。', en: 'Wrong, try again.' },
+  game_continue:        { zh: '继续',             en: 'Continue' },
+  game_confirm:         { zh: '确认',             en: 'Confirm' },
+  game_back10:          { zh: '← 回退10张',       en: '← Back 10 cards' },
+  game_restartAct:      { zh: '↺ 重新开始本章',   en: '↺ Restart chapter' },
+  game_completeChapter: { zh: '✓ 完成本章',       en: '✓ Complete Chapter' },
+  game_endChapter:      { zh: '结束本章',          en: 'End Chapter' },
+  game_endStory:        { zh: '结束故事',          en: 'End Story' },
+  game_over:            { zh: '你死了',            en: 'Game Over' },
+  game_win:             { zh: '你顺利完成了本章。', en: 'You completed this chapter.' },
+  game_tryAgain:        { zh: '再来一次',          en: 'Try Again' },
+  game_playAgain:       { zh: '再玩一次',          en: 'Play Again' },
+  game_itemGained:      { zh: '已获得',            en: 'Obtained' },
 
   // common
   common_loading: { zh: '加载中...', en: 'Loading...' },

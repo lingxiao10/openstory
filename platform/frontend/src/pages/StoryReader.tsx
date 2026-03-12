@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { queryWork } from '../api/queryWork';
 import { AuthContext } from '../store/authStore';
 import { useI18n } from '../i18n';
+import { MysteryEngine } from '../games/mystery/MysteryEngine';
+import { NumericEngine } from '../games/numeric/NumericEngine';
 
 interface Chapter {
   id: string;
@@ -10,6 +12,7 @@ interface Chapter {
   outline_zh: string;
   content_zh: string;
   content_en: string;
+  content_json: string | null;
   is_generated: boolean;
   published: boolean;
 }
@@ -27,27 +30,40 @@ interface Story {
 export function StoryReader() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { token, isLoggedIn } = useContext(AuthContext);
-  const { t, tf, lang } = useI18n();
+  const { t, lang } = useI18n();
 
   const [story, setStory] = useState<Story | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (!id) return;
+    const fetchStory = isLoggedIn
+      ? queryWork<Story>(`/api/stories/${id}`, { token }).then(s => { setIsOwner(true); return s; })
+          .catch(() => queryWork<Story>(`/api/stories/public/${id}`))
+      : queryWork<Story>(`/api/stories/public/${id}`);
+
     Promise.all([
-      queryWork<Story>(`/api/stories/public/${id}`),
+      fetchStory,
       isLoggedIn ? queryWork<string[]>('/api/progress', { token }) : Promise.resolve<string[]>([]),
     ]).then(([s, prog]) => {
       setStory(s);
       setCompleted(prog);
+      const chId = searchParams.get('ch');
+      if (chId) {
+        const target = s.chapters.find((c: Chapter) => c.id === chId);
+        if (target) setActiveChapter(target);
+      }
     }).catch(console.error)
       .finally(() => setLoading(false));
   }, [id, isLoggedIn]);
 
   const completeChapter = async (ch: Chapter) => {
+    if (isOwner) { setActiveChapter(null); return; }
     if (!isLoggedIn) { navigate('/login'); return; }
     try {
       await queryWork(`/api/progress/${ch.id}/complete`, { method: 'POST', token });
@@ -71,19 +87,55 @@ export function StoryReader() {
   const title = lang === 'en' && story.title_en ? story.title_en : story.title_zh;
   const background = lang === 'en' && story.background_en ? story.background_en : story.background_zh;
 
-  // Reading view
+  // Interactive chapter view
   if (activeChapter) {
-    const content = lang === 'en' && activeChapter.content_en ? activeChapter.content_en : activeChapter.content_zh;
     const isDone = completed.includes(activeChapter.id);
+
+    // Has interactive JSON → use game engine
+    if (activeChapter.content_json) {
+      let gameData: any = null;
+      try {
+        const parsed = JSON.parse(activeChapter.content_json);
+        if (story.genre === 'numeric') {
+          // numeric: GameData object with cards array
+          if (parsed && Array.isArray(parsed.cards) && parsed.cards.length > 0) gameData = parsed;
+        } else {
+          // mystery: plain array of nodes
+          if (Array.isArray(parsed) && parsed.length > 0) gameData = { cards: parsed };
+        }
+      } catch { /* ignore */ }
+
+      if (gameData) {
+        return (
+          <div style={rootStyle}>
+            <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button onClick={() => setActiveChapter(null)} style={backBtnStyle}>← {t('game_back')}</button>
+              {isDone && <span style={{ color: '#22c55e', fontSize: 13 }}>✓ {t('reader_done')}</span>}
+            </div>
+            {story.genre === 'mystery'
+              ? <MysteryEngine
+                  gameData={gameData}
+                  onVictory={isDone ? undefined : () => completeChapter(activeChapter)}
+                />
+              : <NumericEngine
+                  gameData={gameData}
+                  onVictory={() => completeChapter(activeChapter)}
+                  isLastChapter={activeChapter.chapter_num === story.chapters.length}
+                />
+            }
+          </div>
+        );
+      }
+    }
+
+    // Fallback: plain text reader
+    const content = lang === 'en' && activeChapter.content_en ? activeChapter.content_en : activeChapter.content_zh;
     return (
       <div style={rootStyle}>
         <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 20px 80px' }}>
           <button onClick={() => setActiveChapter(null)} style={backBtnStyle}>← {t('game_back')}</button>
           <div style={{ textAlign: 'center', color: '#6366f1', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 24 }}>
             {title} · 第{activeChapter.chapter_num}章
-          </div>
-          <div style={{ color: '#94a3b8', fontSize: 13, fontStyle: 'italic', textAlign: 'center', marginBottom: 28 }}>
-            {activeChapter.outline_zh}
           </div>
           <div style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 2, whiteSpace: 'pre-wrap', fontFamily: 'Georgia, serif' }}>
             {content}
@@ -121,7 +173,7 @@ export function StoryReader() {
           {story.chapters.map((ch, i) => {
             const isDone = completed.includes(ch.id);
             const prevDone = i === 0 || completed.includes(story.chapters[i - 1].id);
-            const locked = !prevDone && !isDone;
+            const locked = isOwner ? !ch.is_generated : (!prevDone && !isDone);
 
             return (
               <button
@@ -142,6 +194,12 @@ export function StoryReader() {
                     第 {ch.chapter_num} 章
                   </div>
                   <div style={{ color: '#64748b', fontSize: 12 }}>{ch.outline_zh}</div>
+                  {ch.content_json && (
+                    <div style={{ color: '#6366f1', fontSize: 11, marginTop: 4 }}>⚡ 互动小说</div>
+                  )}
+                  {isOwner && !ch.published && (
+                    <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>● 未发布</div>
+                  )}
                 </div>
                 <div style={{ fontSize: 18, flexShrink: 0, marginLeft: 12 }}>
                   {locked ? '🔒' : isDone ? '✓' : '▶'}

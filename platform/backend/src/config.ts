@@ -12,13 +12,17 @@ export const config = {
     database: process.env.DB_NAME || secret.db?.database || 'storygame',
   },
   ai: {
-    baseUrl: process.env.AI_BASE_URL || 'https://api.openai.com/v1',
-    apiKey: process.env.AI_API_KEY || secret.openrouter_api_key || '',
-    model: process.env.AI_MODEL || 'gpt-4o-mini',
+    baseUrl: process.env.AI_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3',
+    apiKey: process.env.AI_API_KEY || secret.ark_api_key || '',
+    model: process.env.AI_MODEL || 'doubao-seed-2-0-lite-260215',
+  },
+  openrouter: {
+    baseUrl: 'https://openrouter.ai/api/v1',
+    apiKey: secret.openrouter_api_key || '',
   },
   translate: {
-    baseUrl: process.env.TRANSLATE_BASE_URL || process.env.AI_BASE_URL || 'https://openrouter.ai/api/v1',
-    apiKey: process.env.TRANSLATE_API_KEY || process.env.AI_API_KEY || secret.openrouter_api_key || '',
+    baseUrl: process.env.TRANSLATE_BASE_URL || 'https://openrouter.ai/api/v1',
+    apiKey: process.env.TRANSLATE_API_KEY || secret.openrouter_api_key || '',
     model: 'x-ai/grok-code-fast-1',
   },
   storiesDir: process.env.STORIES_DIR || '../stories',
@@ -27,4 +31,7 @@ export const config = {
     from: secret.resend_from || '',
   },
   needCheckEmail: secret.need_check_email ?? false,
+  dailyGenLimitEnabled: secret.daily_gen_limit_enabled ?? false,
+  dailyGenLimit: secret.daily_gen_limit ?? 10,
+  adminEmail: secret.admin_email || '',
 };

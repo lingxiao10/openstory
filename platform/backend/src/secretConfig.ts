@@ -4,9 +4,13 @@ import path from 'path';
 interface SecretJson {
   db?: { host?: string; port?: number; user?: string; password?: string; database?: string };
   openrouter_api_key?: string;
+  ark_api_key?: string;
   resend_api_key?: string;
   resend_from?: string;
   need_check_email?: boolean;
+  daily_gen_limit_enabled?: boolean;
+  daily_gen_limit?: number;
+  admin_email?: string;
 }
 
 function loadSecret(): SecretJson {

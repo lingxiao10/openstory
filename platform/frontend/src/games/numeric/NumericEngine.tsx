@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useI18n } from '../../i18n';
 import { BilingualText } from '../../i18n/translations';
 
@@ -37,18 +37,21 @@ interface GameData {
   statDefs: Record<string, StatDef>;
   itemDefs: Record<string, ItemDef>;
   cards: StoryCard[];
+  winText?: BilingualText;
 }
 
 interface Props {
   gameData: GameData;
+  onVictory?: () => void;
+  isLastChapter?: boolean;
 }
 
 function getInitialStats(statDefs: Record<string, StatDef>): Record<string, number> {
   return Object.fromEntries(Object.keys(statDefs).map(k => [k, 10]));
 }
 
-export function NumericEngine({ gameData }: Props) {
-  const { tf, lang } = useI18n();
+export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
+  const { t, tf, lang } = useI18n();
   const [stats, setStats] = useState<Record<string, number>>(() => getInitialStats(gameData.statDefs || {}));
   const [items, setItems] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
@@ -60,6 +63,14 @@ export function NumericEngine({ gameData }: Props) {
 
   const data = gameData.cards || [];
   const card = data[index] as StoryCard | undefined;
+
+  // Shuffle choices once per card index to randomize option order each encounter
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const shuffledChoices = useMemo(() => {
+    if (!card?.choices) return [];
+    return [...card.choices].sort(() => Math.random() - 0.5);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
 
   const applyChoice = (choice: StoryChoice) => {
     const newStats = { ...stats };
@@ -102,7 +113,7 @@ export function NumericEngine({ gameData }: Props) {
     setLastEffects({});
     setLastItem(null);
     const nextIndex = index + 1;
-    if (nextIndex >= data.length) { setWin(true); return; }
+    if (nextIndex >= data.length || data[nextIndex]?.type === 'end') { setWin(true); return; }
     setIndex(nextIndex);
   };
 
@@ -170,7 +181,7 @@ export function NumericEngine({ gameData }: Props) {
                 const item = gameData.itemDefs?.[lastItem];
                 return item ? (
                   <span style={{ fontSize: 13, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#6366f122', color: '#a5b4fc' }}>
-                    {item.icon} {tf(item.name)} 已获得
+                    {item.icon} {tf(item.name)} {t('game_itemGained')}
                   </span>
                 ) : null;
               })()}
@@ -182,14 +193,16 @@ export function NumericEngine({ gameData }: Props) {
       {gameOver ? (
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 32, textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>💀</div>
-          <h3 style={{ color: '#ef4444', marginBottom: 16 }}>{lang === 'en' ? 'Game Over' : '你死了'}</h3>
-          <button onClick={restart} style={restartBtnStyle}>{lang === 'en' ? 'Try Again' : '再来一次'}</button>
+          <h3 style={{ color: '#ef4444', marginBottom: 16 }}>{t('game_over')}</h3>
+          <button onClick={restart} style={restartBtnStyle}>{t('game_tryAgain')}</button>
         </div>
       ) : win ? (
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 32, textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-          <h3 style={{ color: '#22c55e', marginBottom: 16 }}>{lang === 'en' ? 'You Survived!' : '你活下来了！'}</h3>
-          <button onClick={restart} style={restartBtnStyle}>{lang === 'en' ? 'Play Again' : '再玩一次'}</button>
+          <h3 style={{ color: '#22c55e', marginBottom: 16 }}>{gameData.winText ? tf(gameData.winText) : t('game_win')}</h3>
+          <button onClick={onVictory} style={{ ...restartBtnStyle, background: '#22c55e' }}>
+            {isLastChapter ? t('game_endStory') : t('game_endChapter')}
+          </button>
         </div>
       ) : card ? (
         <>
@@ -210,7 +223,7 @@ export function NumericEngine({ gameData }: Props) {
             <>
               <p style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 1.9, marginBottom: 24 }}>{tf(card.text)}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {card.choices?.map((choice, i) => (
+                {shuffledChoices.map((choice, i) => (
                   <button
                     key={i}
                     onClick={() => applyChoice(choice)}
@@ -228,18 +241,6 @@ export function NumericEngine({ gameData }: Props) {
         </>
       ) : null}
 
-      {/* Progress dots */}
-      {!gameOver && !win && (
-        <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4 }}>
-          {data.slice(0, Math.min(data.length, 24)).map((_, i) => (
-            <div key={i} style={{
-              width: i === index ? 20 : 6, height: 6, borderRadius: 3,
-              background: i === index ? '#6366f1' : i < index ? '#334155' : '#1e293b',
-              transition: 'all 0.3s',
-            }} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

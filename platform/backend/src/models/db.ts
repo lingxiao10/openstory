@@ -10,7 +10,12 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  charset: 'utf8mb4',
+  charset: 'UTF8MB4_UNICODE_CI',
+});
+
+// Ensure every connection uses utf8mb4
+pool.on('connection', (conn: any) => {
+  conn.query("SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'");
 });
 
 export default pool;

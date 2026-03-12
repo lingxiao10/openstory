@@ -5,6 +5,7 @@ import gameRoutes from './routes/games';
 import storyRoutes from './routes/stories';
 import generateRoutes from './routes/generate';
 import progressRoutes from './routes/progress';
+import adminRoutes from './routes/admin';
 import { errorHandler } from './middleware/error';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api/games', gameRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(errorHandler);
 

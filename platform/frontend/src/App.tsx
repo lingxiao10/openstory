@@ -7,6 +7,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { MyStories } from './pages/MyStories';
 import { StoryReader } from './pages/StoryReader';
+import { Admin } from './pages/Admin';
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/my-stories" element={<MyStories />} />
             <Route path="/create" element={<Navigate to="/my-stories" replace />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
