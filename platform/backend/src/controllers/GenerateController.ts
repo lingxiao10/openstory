@@ -11,6 +11,12 @@ export class GenerateController {
     res.json({ text, chars: text?.length ?? 0 });
   }
 
+  static progressByKey(req: Request, res: Response) {
+    const { key } = req.params;
+    const text = AIService.genProgress.get(key) ?? null;
+    res.json({ text, chars: text?.length ?? 0 });
+  }
+
   static async generate(req: Request, res: Response) {
     try {
       const { storyId, chapterId } = req.params;

@@ -4,10 +4,10 @@ import { StoryService } from '../services/StoryService';
 export class StoryController {
   static async create(req: Request, res: Response) {
     try {
-      const { title, genre, background, chapterCount } = req.body;
+      const { title, genre, background, chapterCount, progressKey } = req.body;
       if (!title || !genre) return res.status(400).json({ error: 'Missing required fields' });
       const count = typeof chapterCount === 'number' ? chapterCount : 0;
-      const id = await StoryService.createStory(req.user!.userId, title, genre, background || '', count);
+      const id = await StoryService.createStory(req.user!.userId, title, genre, background || '', count, progressKey || undefined);
       res.status(201).json({ id });
     } catch (err: any) {
       res.status(400).json({ error: err.message });

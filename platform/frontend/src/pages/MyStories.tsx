@@ -100,6 +100,10 @@ export function MyStories() {
   const [chapterCount, setChapterCount] = useState(3);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [outlineGenText, setOutlineGenText] = useState('');
+  const [outlineBoxVisible, setOutlineBoxVisible] = useState(false);
+  const outlinePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const outlineHideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) { navigate('/login'); return; }
@@ -116,17 +120,37 @@ export function MyStories() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setCreating(true);
+    // 只在有章节数时才需要显示进度框
+    const needProgress = chapterCount > 0;
+    const progressKey = needProgress ? `outline_${Date.now()}_${Math.random().toString(36).slice(2)}` : undefined;
+    if (needProgress && progressKey) {
+      if (outlineHideRef.current) { clearTimeout(outlineHideRef.current); outlineHideRef.current = null; }
+      setOutlineGenText('');
+      setOutlineBoxVisible(true);
+      outlinePollRef.current = setInterval(async () => {
+        try {
+          const data = await queryWork<{ text: string | null }>(
+            `/api/generate/progress/${progressKey}`, { token }
+          );
+          if (data.text != null) setOutlineGenText(data.text);
+        } catch { /* ignore */ }
+      }, 800);
+    }
     try {
       await queryWork('/api/stories', {
         method: 'POST',
-        body: { title, background: bg, genre, chapterCount },
+        body: { title, background: bg, genre, chapterCount, progressKey },
         token,
       });
       setTitle(''); setBg(''); setChapterCount(3);
       setShowForm(false);
       load();
     } catch (err: any) { setError(err.message); }
-    finally { setCreating(false); }
+    finally {
+      setCreating(false);
+      if (outlinePollRef.current) { clearInterval(outlinePollRef.current); outlinePollRef.current = null; }
+      outlineHideRef.current = setTimeout(() => { setOutlineBoxVisible(false); setOutlineGenText(''); }, 1000);
+    }
   };
 
   return (
@@ -169,6 +193,33 @@ export function MyStories() {
               {creating ? t('story_generatingOutline') : t('story_create')}
             </button>
           </form>
+        </div>
+      )}
+
+      {outlineBoxVisible && (
+        <div style={{
+          position: 'fixed', bottom: 20, right: 20,
+          background: '#0f172a', border: '1px solid #6366f155',
+          borderRadius: 12, padding: '10px 14px',
+          width: 280, maxHeight: 180, zIndex: 9998,
+          boxShadow: '0 4px 20px #00000066',
+          display: 'flex', flexDirection: 'column', gap: 6,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#6366f1', fontSize: 11, fontWeight: 700 }}>
+              ⚡ {lang === 'zh' ? '生成大纲中' : 'Generating Outlines'}
+            </span>
+            <span style={{ color: '#475569', fontSize: 11 }}>
+              {outlineGenText.length} {lang === 'zh' ? '字' : 'chars'}
+            </span>
+          </div>
+          <div style={{
+            color: '#64748b', fontSize: 11, lineHeight: 1.6,
+            overflow: 'hidden', maxHeight: 130,
+            wordBreak: 'break-all', whiteSpace: 'pre-wrap',
+          }}>
+            {outlineGenText.length > 0 ? outlineGenText.slice(-300) : (lang === 'zh' ? '等待 AI 响应...' : 'Waiting for AI...')}
+          </div>
         </div>
       )}
 

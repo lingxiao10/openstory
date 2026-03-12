@@ -9,7 +9,7 @@ export class StoryService {
    * Create a story from user-supplied single-language title/background.
    * TranslateService auto-detects the language and produces the other language.
    */
-  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '', chapterCount = 0) {
+  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '', chapterCount = 0, progressKey?: string) {
     const [titleResult, bgResult] = await Promise.all([
       TranslateService.detectAndTranslate(title),
       background ? TranslateService.detectAndTranslate(background) : Promise.resolve({ zh: '', en: '' }),
@@ -31,7 +31,7 @@ export class StoryService {
     if (chapterCount > 0) {
       const count = Math.min(Math.max(1, chapterCount), 10);
       const fullStory = { ...story, created_at: new Date() } as Story;
-      const outlines = await AIService.generateStoryOutlines(fullStory, count);
+      const outlines = await AIService.generateStoryOutlines(fullStory, count, progressKey);
       for (let i = 0; i < outlines.length; i++) {
         const chapter: Chapter = {
           id: uuidv4(),

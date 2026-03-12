@@ -159,7 +159,7 @@ export class AIService {
   /**
    * 为新故事生成 N 章大纲（一次 AI 调用，返回 [{zh, en}] 数组）
    */
-  static async generateStoryOutlines(story: Story, count: number): Promise<Array<{ zh: string; en: string }>> {
+  static async generateStoryOutlines(story: Story, count: number, progressKey?: string): Promise<Array<{ zh: string; en: string }>> {
     const isNumeric = story.genre === 'numeric';
     const prompt = `你是网文编剧，为以下故事生成${count}个章节大纲。直接输出 JSON 数组，不要任何说明或 markdown。
 故事：${story.title_zh}
@@ -172,7 +172,13 @@ export class AIService {
 输出格式（共${count}个元素）：[{"zh":"详尽大纲约500字","en":"detailed outline about 500 words"},...]`;
 
     const maxTokens = count * 1200;
-    const raw = await AIService.callAI(prompt, 'ark', maxTokens, 'deepseek-v3-2-251201');
+    if (progressKey) AIService.genProgress.set(progressKey, '');
+    let raw: string;
+    try {
+      raw = await AIService.callAI(prompt, 'ark', maxTokens, 'deepseek-v3-2-251201', progressKey);
+    } finally {
+      AIService.genProgress.delete(progressKey ?? '');
+    }
     let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     const parsed = JSON.parse(cleaned);
     if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('AI did not return valid outlines');
