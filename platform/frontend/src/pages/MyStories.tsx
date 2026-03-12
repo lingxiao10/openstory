@@ -134,7 +134,7 @@ export function MyStories() {
           );
           if (data.text != null) setOutlineGenText(data.text);
         } catch { /* ignore */ }
-      }, 800);
+      }, 1500);
     }
     try {
       await queryWork('/api/stories', {
@@ -263,7 +263,7 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
           );
           if (data.text != null) setGenText(data.text);
         } catch { /* ignore */ }
-      }, 800);
+      }, 1500);
     } else {
       if (genPollRef.current) { clearInterval(genPollRef.current); genPollRef.current = null; }
       // 生成结束：1秒后关闭消息框
