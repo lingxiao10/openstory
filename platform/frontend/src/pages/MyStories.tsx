@@ -246,6 +246,8 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
   const [err, setErr] = useState('');
   const [toast, setToast] = useState(false);
   const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [genText, setGenText] = useState('');
   const [genBoxVisible, setGenBoxVisible] = useState(false);
   const genPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -367,6 +369,16 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
     setQueuedIds([]);
   };
 
+  const deleteStory = async () => {
+    setDeleting(true);
+    try {
+      await queryWork(`/api/stories/${story.id}`, { method: 'DELETE', token });
+      setShowDeleteModal(false);
+      onRefresh();
+    } catch (e: any) { setErr(e.message); }
+    finally { setDeleting(false); }
+  };
+
   const deleteChapter = async (ch: Chapter) => {
     if (!confirm(lang === 'zh' ? `确定删除第${ch.chapter_num}章？` : `Delete chapter ${ch.chapter_num}?`)) return;
     try {
@@ -433,6 +445,50 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
         </div>
       )}
 
+      {showDeleteModal && (
+        <div
+          onClick={() => !deleting && setShowDeleteModal(false)}
+          style={{ position: 'fixed', inset: 0, background: '#000b', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#1e293b', borderRadius: 20, padding: '28px 24px', maxWidth: 360, width: '100%', border: '1px solid #ef4444', textAlign: 'center' }}
+          >
+            <div style={{ fontSize: 36, marginBottom: 10 }}>🗑️</div>
+            <h3 style={{ color: '#e2e8f0', marginBottom: 10, fontSize: 17 }}>
+              {lang === 'zh' ? '删除故事' : 'Delete Story'}
+            </h3>
+            <p style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
+              {lang === 'zh' ? `确定删除《${story.title_zh}》吗？此操作不可撤销。` : `Delete "${story.title_en || story.title_zh}"? This cannot be undone.`}
+            </p>
+            {publishedCount > 0 && (
+              <p style={{ color: '#fbbf24', fontSize: 12, lineHeight: 1.6, background: '#f59e0b11', border: '1px solid #f59e0b33', borderRadius: 8, padding: '8px 12px', marginBottom: 8 }}>
+                {lang === 'zh'
+                  ? `该故事有 ${publishedCount} 章已发布，删除后将自动全部下架。`
+                  : `This story has ${publishedCount} published chapter(s). They will be unpublished automatically.`}
+              </p>
+            )}
+            {err && <p style={{ color: '#ef4444', fontSize: 12, marginBottom: 8 }}>{err}</p>}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16 }}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{ background: '#334155', color: '#94a3b8', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: 13, cursor: 'pointer' }}
+              >
+                {lang === 'zh' ? '取消' : 'Cancel'}
+              </button>
+              <button
+                onClick={deleteStory}
+                disabled={deleting}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: deleting ? 0.6 : 1 }}
+              >
+                {deleting ? (lang === 'zh' ? '删除中...' : 'Deleting...') : (lang === 'zh' ? '确认删除' : 'Delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showQuotaModal && (
         <div
           onClick={() => setShowQuotaModal(false)}
@@ -474,7 +530,15 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
             {t(story.genre === 'mystery' ? 'story_mystery' : 'story_numeric')} · {story.chapters.length} 章 · {publishedCount > 0 ? `${publishedCount} 章已发布` : t('story_status_draft')}
           </span>
         </div>
-        <span style={{ color: '#64748b' }}>{expanded ? '▲' : '▼'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={e => { e.stopPropagation(); setErr(''); setShowDeleteModal(true); }}
+            style={{ background: '#ef444422', color: '#ef4444', border: '1px solid #ef444433', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
+          >
+            {lang === 'zh' ? '删除' : 'Delete'}
+          </button>
+          <span style={{ color: '#64748b' }}>{expanded ? '▲' : '▼'}</span>
+        </div>
       </div>
 
       {expanded && (

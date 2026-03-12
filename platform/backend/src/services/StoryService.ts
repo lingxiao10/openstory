@@ -174,6 +174,24 @@ export class StoryService {
     }
   }
 
+  static async deleteStory(storyId: string, userId: string) {
+    const story = await StoryModel.findById(storyId);
+    if (!story) throw new Error('Story not found');
+    if (story.user_id !== userId) throw new Error('Forbidden');
+
+    const chapters = await StoryModel.getChapters(storyId);
+    const publishedCount = chapters.filter(c => c.published).length;
+
+    // Unpublish all chapters, then delete
+    if (publishedCount > 0) {
+      await StoryModel.unpublishAllChapters(storyId);
+    }
+    await StoryModel.deleteAllChapters(storyId);
+    await StoryModel.deleteStory(storyId);
+
+    return { publishedCount };
+  }
+
   static async getPublicStories() {
     return StoryModel.getPublicStories();
   }

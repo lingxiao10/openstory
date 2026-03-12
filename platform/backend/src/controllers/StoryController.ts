@@ -63,6 +63,15 @@ export class StoryController {
     }
   }
 
+  static async deleteStory(req: Request, res: Response) {
+    try {
+      const result = await StoryService.deleteStory(req.params.id, req.user!.userId);
+      res.json({ ok: true, publishedCount: result.publishedCount });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
   static async publishChapter(req: Request, res: Response) {
     try {
       await StoryService.publishChapter(req.params.id, req.params.chapterId, req.user!.userId);

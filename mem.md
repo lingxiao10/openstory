@@ -82,6 +82,13 @@
 - 前端 `StoryCard` 轮询（800ms），生成结束后延迟1秒关闭右下角消息框
 - 消息框：fixed 右下角，280px宽，最高180px，显示最新300字 + 字数
 
+## 故事删除
+- `DELETE /api/stories/:id`：删除故事及全部章节；若有已发布章节，先 unpublish 再删
+- 前端 StoryCard：右上角红色"删除"按钮（e.stopPropagation 防止折叠触发）
+- 确认弹窗：若有已发布章节显示黄色警告提示（几章将下架），确认后执行删除
+- StoryModel 新增 `unpublishAllChapters` / `deleteAllChapters` / `deleteStory`
+- StoryService.deleteStory 返回 `{ publishedCount }`，Controller 透传给前端
+
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`
 - Windows 需用 `script: 'cmd', args: '/c npm run dev'`（直接用 npm 会报 SyntaxError）

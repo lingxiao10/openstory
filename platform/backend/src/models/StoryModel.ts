@@ -93,6 +93,18 @@ export class StoryModel {
     // Re-number remaining chapters
   }
 
+  static async unpublishAllChapters(storyId: string): Promise<void> {
+    await pool.execute('UPDATE chapters SET published = 0, published_at = NULL WHERE story_id = ?', [storyId]);
+  }
+
+  static async deleteAllChapters(storyId: string): Promise<void> {
+    await pool.execute('DELETE FROM chapters WHERE story_id = ?', [storyId]);
+  }
+
+  static async deleteStory(id: string): Promise<void> {
+    await pool.execute('DELETE FROM stories WHERE id = ?', [id]);
+  }
+
   static async renumberChapters(storyId: string): Promise<void> {
     const [rows] = await pool.execute<any[]>(
       'SELECT id FROM chapters WHERE story_id = ? ORDER BY chapter_num',
