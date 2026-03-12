@@ -193,7 +193,7 @@ function StoryCard({ story, token, onRefresh }: { story: Story; token: string | 
           {/* Chapter list */}
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {story.chapters.map((ch, idx) => {
-              const prevGenerated = idx === 0 || story.chapters[idx - 1].is_generated;
+              const prevGenerated = idx === 0 || !!story.chapters[idx - 1].is_generated;
               return (
                 <ChapterRow
                   key={ch.id} ch={ch} lang={lang}
@@ -231,12 +231,12 @@ function ChapterRow({ ch, lang, generating, prevGenerated, onGenerate, onDelete,
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <span style={{ color: '#6366f1', fontSize: 12, fontWeight: 700 }}>第 {ch.chapter_num} 章</span>
-            {ch.published && (
+            {!!ch.published && (
               <span style={{ background: '#22c55e22', color: '#86efac', fontSize: 11, padding: '1px 7px', borderRadius: 10 }}>
                 {t('story_published')}
               </span>
             )}
-            {ch.is_generated && !ch.published && (
+            {!!ch.is_generated && !ch.published && (
               <span style={{ background: '#6366f122', color: '#a5b4fc', fontSize: 11, padding: '1px 7px', borderRadius: 10 }}>
                 {lang === 'zh' ? '已生成' : 'Generated'}
               </span>
@@ -246,7 +246,7 @@ function ChapterRow({ ch, lang, generating, prevGenerated, onGenerate, onDelete,
             )}
           </div>
           <p style={{ color: '#94a3b8', fontSize: 12, margin: 0 }}>{ch.outline_zh}</p>
-          {ch.is_generated && ch.content_zh && ch.content_zh !== '生成中...' && (
+          {!!ch.is_generated && ch.content_zh && ch.content_zh !== '生成中...' && (
             <button
               onClick={() => setShowContent(!showContent)}
               style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 11, padding: '4px 0', cursor: 'pointer' }}
@@ -265,7 +265,7 @@ function ChapterRow({ ch, lang, generating, prevGenerated, onGenerate, onDelete,
           <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <button
               onClick={onGenerate}
-              disabled={generating || !prevGenerated}
+              disabled={!!generating || !prevGenerated}
               title={!prevGenerated ? (lang === 'zh' ? '请先生成上一章' : 'Generate previous chapter first') : undefined}
               style={smallBtn(!prevGenerated ? '#475569' : '#6366f1')}
             >

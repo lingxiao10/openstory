@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './store/authStore';
 import { LangProvider } from './store/langStore';
 import { Home } from './pages/Home';
@@ -20,6 +20,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/my-stories" element={<MyStories />} />
+            <Route path="/create" element={<Navigate to="/my-stories" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
