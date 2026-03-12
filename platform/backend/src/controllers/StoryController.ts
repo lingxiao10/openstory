@@ -68,7 +68,8 @@ export class StoryController {
       await StoryService.publishChapter(req.params.id, req.params.chapterId, req.user!.userId);
       res.json({ ok: true });
     } catch (err: any) {
-      res.status(400).json({ error: err.message });
+      const code = err.message === 'Previous chapter must be published first' ? 'PREV_CHAPTER_NOT_PUBLISHED' : undefined;
+      res.status(400).json({ error: err.message, code });
     }
   }
 

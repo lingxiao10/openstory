@@ -161,8 +161,6 @@ export class AIService {
    */
   static async generateStoryOutlines(story: Story, count: number): Promise<Array<{ zh: string; en: string }>> {
     const isNumeric = story.genre === 'numeric';
-    const outlineWordCount = isNumeric ? '约1000字' : '200-300字';
-    const outlineWordCountEn = isNumeric ? 'about 1000 words' : '200-300 words';
     const prompt = `你是网文编剧，为以下故事生成${count}个章节大纲。直接输出 JSON 数组，不要任何说明或 markdown。
 故事：${story.title_zh}
 背景：${story.background_zh || '无'}
@@ -170,10 +168,10 @@ export class AIService {
 要求：
 - 大纲文字中不要包含"第X章"等章节序号，只写情节内容
 - 第2章起每章必须和前一章高度衔接，情节连贯推进，不得跳跃或重复
-- 每章大纲需详尽具体，${outlineWordCount}，把本章的人物行动、关键事件、场景氛围、情节转折、人物心理都交代清楚，让读者清楚知道这章会发生什么
-输出格式（共${count}个元素）：[{"zh":"详尽大纲${outlineWordCount}","en":"detailed outline ${outlineWordCountEn}"},...]`;
+- 每章大纲需详尽具体，约500字，把本章的人物行动、关键事件、场景氛围、情节转折、人物心理都交代清楚，让读者清楚知道这章会发生什么
+输出格式（共${count}个元素）：[{"zh":"详尽大纲约500字","en":"detailed outline about 500 words"},...]`;
 
-    const maxTokens = isNumeric ? count * 3000 : 8000;
+    const maxTokens = count * 1200;
     const raw = await AIService.callAI(prompt, 'ark', maxTokens, 'deepseek-v3-2-251201');
     let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     const parsed = JSON.parse(cleaned);
@@ -231,11 +229,16 @@ ${prevContext}
 - 文字中绝对禁止使用双引号（"），对话用单引号（'）代替
 
 数值设计要求（非常重要，必须严格遵守）：
+- 必须根据故事背景自行设计4个合适的属性，使数值系统与故事主题高度契合
+- 推荐两套参考方案（也可完全自定义）：
+  方案A（探险/生存）：life生命、stamina体力、mood心情、supplies物资
+  方案B（冒险/商旅）：life生命、stamina体力、mood心情、gold金币
+  自定义举例：如武侠故事可用 life生命/inner内力/honor声望/bond缘分；空间故事可用 life生命/oxygen氧气/power电力/morale士气
 - 每个 choice 节点的 effects 中，非零值最多3个（通常2-3个），不要4个全改
 - 数值变化必须有增有减（即"数值交换"），例如体力-2同时心情+1，而非全部减少或全部增加
-- 8-10个 choice 节点要均匀覆盖4种属性（life/stamina/mood/supplies），不能总是只围绕某几个属性；每种属性至少被2个不同choice节点涉及
+- 8-10个 choice 节点要均匀覆盖4种属性，不能总是只围绕某几个属性；每种属性至少被2个不同choice节点涉及
 - 设计要有挑战性：关键时刻的错误选择应有明显惩罚（生命-3到-4），迫使玩家认真权衡
-- effects 字段必须包含所有4个键（不影响的设为0）
+- effects 字段必须包含所有4个键（与你定义的statDefs键名一致，不影响的设为0）
 
 输出格式（完整 GameData 对象）：
 {
@@ -264,10 +267,10 @@ ${prevContext}
 规则：
 - cards 共 60 个节点，其中 8-10 个 choice 节点，story 节点约 49-51 个，最后1个 end 节点
 - 每个 choice 必须有 2 个选项（choices 数组长度=2）
-- effects 必须包含所有4个数值键（life/stamina/mood/supplies），不影响的设为0；非零值最多3个
+- effects 必须包含所有4个数值键（与statDefs键名完全一致），不影响的设为0；非零值最多3个
 - 生命归零=死亡，关键节点可扣3-4点，普通节点扣1-2点
 - itemDefs 只定义本章会出现的道具（0-4个）
-- statDefs 固定用上述4个数值，不要增删
+- statDefs 必须恰好4个属性，键名用英文小写，根据故事主题自行设计（不必照搬示例）
 - giveItem 和 bonusIf 是可选字段，不需要时省略
 - 最后一个节点用 type:"end"，text 写通关文本，不需要winText时可省略
 
@@ -439,7 +442,7 @@ JSON 格式规则：
           {
             maxTokens,
             temperature: 0.8,
-            timeoutMs: 180000,
+            timeoutMs: 600000,
             onChunk: (_delta, total) => {
               if (progressKey) AIService.genProgress.set(progressKey, total);
               if (total.length - lastLogAt >= 200) {

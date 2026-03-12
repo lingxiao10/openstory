@@ -40,7 +40,7 @@
 - `AIService.generateChapter` 按 story.genre 分支调用：
   - mystery → `generateInteractiveJson`：生成数组 `[{id,type,text,...}]`，节点类型 story/choice/victory，choice 含 optA/optB/correct/penalty/hint
   - numeric → `generateNumericJson`：生成 GameData 对象 `{title,description,statDefs,itemDefs,cards,winText}`，cards 中 choice 节点含 choices 数组（effects/giveItem/bonusIf）
-- statDefs 固定4个：life/stamina/mood/supplies；itemDefs 按章节内容动态定义（0-4个）
+- statDefs 4个属性由 AI 根据故事主题自由设计（键名英文小写），推荐参考：物资版 life/stamina/mood/supplies、金币版 life/stamina/mood/gold，也可完全自定义（武侠内力/声望、太空氧气/电力等）；itemDefs 按章节内容动态定义（0-4个）；前端 NumericEngine 动态读取键名，天然支持
 - 互动JSON生成专用模型：`deepseek-v3-2-251201`
 - mystery: maxTokens=6000，节点 30 个内，3-4个choice，story节点一句话≤15字
 - numeric: maxTokens=16000，节点 60 个，8-10个choice，story节点一句话≤15字
@@ -58,6 +58,12 @@
 - 管理后台功能：搜索用户（ID/用户名/邮箱）、查看今日用量、设置个人额度
 - `requireAdmin` 中间件：查 DB 验证邮箱 === config.adminEmail
 
+## 后端错误国际化规范
+- 后端 throw Error 同时在 controller 层附 `code` 字段返回：`res.json({ error: msg, code })`
+- 前端 `queryWork.ts` 已读取 `err.code`；catch 时用 `err_${code}` 查 translations，找不到则回退 `e.message`
+- 已有 code：`QUOTA_EXCEEDED`（429）、`PREV_CHAPTER_NOT_PUBLISHED`（400，发布章节顺序校验）
+- translations key 命名：`err_CODE_NAME`
+
 ## platform 架构
 - backend: `src/server.ts` → `app.ts`，port 3001
 - frontend: Vite，port 5173（被占时自动 5174），`/api` 代理到 3001
@@ -67,6 +73,14 @@
 - 所有引擎文字通过 `t(key)` 国际化，键前缀 `game_`
 - 章节结束胜利文字：优先读 `gameData.winText`（BilingualText），无则 fallback `t('game_win')` = "你顺利完成了本章。"
 - `winText` 字段在每章节 JSON 中单独配置（numeric engine）
+
+## 生成进度实时显示
+- `AIService.genProgress`: `Map<chapterId, string>`，AI流式生成时实时写入当前累计文本
+- `callAI` 支持 `progressKey?: string` 参数，`onChunk` 时更新 Map
+- `generateChapter` 在 finally 块中清除 Map 条目
+- 新路由: `GET /api/generate/:storyId/:chapterId/progress` → `{ text, chars }`
+- 前端 `StoryCard` 轮询（800ms），生成结束后延迟1秒关闭右下角消息框
+- 消息框：fixed 右下角，280px宽，最高180px，显示最新300字 + 字数
 
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`

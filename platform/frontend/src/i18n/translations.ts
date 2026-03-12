@@ -84,6 +84,9 @@ export const translations = {
   game_playAgain:       { zh: '再玩一次',          en: 'Play Again' },
   game_itemGained:      { zh: '已获得',            en: 'Obtained' },
 
+  // errors
+  err_PREV_CHAPTER_NOT_PUBLISHED: { zh: '请先发布上一章', en: 'Previous chapter must be published first' },
+
   // common
   common_loading: { zh: '加载中...', en: 'Loading...' },
   common_error:   { zh: '出错了',    en: 'Error occurred' },
