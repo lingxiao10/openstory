@@ -43,15 +43,11 @@ export function Register() {
     setError('');
     setLoading(true);
     try {
-      await queryWork<{ token: string }>('/api/auth/register', {
+      const data = await queryWork<{ token: string; user: any }>('/api/auth/register', {
         method: 'POST',
         body: { username, email, password, ...(needCheckEmail ? { code } : {}) },
       });
-      const loginData = await queryWork<{ token: string; user: any }>('/api/auth/login', {
-        method: 'POST',
-        body: { email, password },
-      });
-      login(loginData.user, loginData.token);
+      login(data.user, data.token);
       navigate('/');
     } catch (err: any) {
       setError(err.message || t('auth_error'));

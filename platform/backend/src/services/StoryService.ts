@@ -9,7 +9,7 @@ export class StoryService {
    * Create a story from user-supplied single-language title/background.
    * TranslateService auto-detects the language and produces the other language.
    */
-  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '', chapterCount = 0, progressKey?: string) {
+  static async createStory(userId: string, title: string, genre: 'mystery' | 'numeric', background = '', chapterCount = 0, progressKey?: string, playerName = '', aiModel = 'deepseek-v3-2-251201') {
     const [titleResult, bgResult] = await Promise.all([
       TranslateService.detectAndTranslate(title),
       background ? TranslateService.detectAndTranslate(background) : Promise.resolve({ zh: '', en: '' }),
@@ -25,6 +25,8 @@ export class StoryService {
       background_en: bgResult.en,
       genre,
       status: 'draft',
+      player_name: playerName,
+      ai_model: aiModel,
     };
     await StoryModel.create(story);
 

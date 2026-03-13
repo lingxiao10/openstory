@@ -19,11 +19,16 @@
 
 ## 新建故事自动生成章节
 - 创建故事时传 `chapterCount`（1-10），后端一次 AI 调用生成所有章节大纲
-- `AIService.generateStoryOutlines(story, count)` → deepseek-v3，maxTokens=8000，返回 `[{zh,en}]`
-- 每章大纲要求详尽 200-300字，交代人物行动/事件/场景/转折
-- `StoryService.createStory(..., chapterCount)` 服务端上限 clamp 到 10
-- 前端滑动条 range 1-10，默认3；创建完成后重置为3
-- 用户手动添加章节功能保留不变
+- `StoryService.createStory(..., chapterCount, progressKey, playerName, aiModel)` 服务端上限 clamp 到 10
+- 故事表新增字段：`player_name`（玩家角色名）、`ai_model`（选用模型）
+
+## 玩家角色名 & 模型选择（2026-03-13）
+- `stories.player_name`：创建时填写，生成大纲/章节 JSON 时注入提示词："玩家控制的角色是：{name}，以第三人称视角..."
+- `stories.ai_model`：创建时选择，后续所有 AI 调用均使用此模型
+- 可选模型：deepseek-v3-2-251201(ark)、doubao-seed-1-8-251228(ark)、google/gemini-2.5-pro(openrouter)、google/gemini-2.5-flash(openrouter)
+- provider 由 `getProvider(model)` 自动判断：`model.startsWith('google/')` → openrouter，其余 → ark
+- openrouter 调用已升级为 SSE 流式（与 ark 一样支持 genProgress 实时进度）
+- 防重复大纲生成：前端 `creatingRef`（ref 级别 guard）+ 后端 `creatingSet`（per-user 锁）
 
 ## 生成防重复提交保护 & 状态持久化
 - `chapters.generating_at DATETIME NULL`：生成开始时写入，完成/失败时清空（NULL）
@@ -89,11 +94,31 @@
 - StoryModel 新增 `unpublishAllChapters` / `deleteAllChapters` / `deleteStory`
 - StoryService.deleteStory 返回 `{ publishedCount }`，Controller 透传给前端
 
+## 批量生成故事（纯前端）
+- 标题栏"批量生成"按钮 → 打开 `BatchCreateModal`（独立于现有创建逻辑）
+- 最多 5 个故事 slot，每个填：标题/背景/玩家名/类型/AI模型/章节数
+- 点"并发生成 N 个故事" → `Promise.allSettled` 并发调用 `/api/stories` POST
+- 每个 slot 独立显示状态（idle/creating/done/error）
+- 全部完成后调 `load()` 刷新列表，点"完成关闭"关弹窗
+
+## 展示模板切换
+- 前端 `StoryReader.tsx` 支持多种展示风格，localStorage key `story_theme`（`classic` | `card`），**默认 `card`**
+- 章节列表页右上角"🃏 卡片风格 / 📖 经典风格"按钮（仅 mystery 类型故事显示）
+- 卡片风格：`MysteryCardEngine.tsx`（`games/mystery/`），随机旋转 + 3条命，自带返回/胜利界面
+- `MysteryCardEngine` 内置色调切换：localStorage key `card_tone`（`dark` | `light`），**默认 `dark`**
+  - 暗色调（dark）：深棕黑底 `#1C1510`，暖金字 `#C9A84C`，暗色背景
+  - 白色调（light）：羊皮纸底 `#F4EAD5`，深棕字 `#2C1810`，米白背景
+  - 切换按钮位于右上角（lives旁）：`☀ 白色调` / `☾ 暗色调`
+- 接口与 `MysteryEngine` 相同：`{ gameData, onVictory?, onBack? }`
+- numeric 类型暂不支持卡片风格
+
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`
-- Windows 需用 `script: 'cmd', args: '/c npm run dev'`（直接用 npm 会报 SyntaxError）
+- Windows 需用 `script: 'C:\\Windows\\System32\\cmd.exe', args: '/c npm run dev', interpreter: 'none'`
 - 常用命令：
-  - `pm2 start ecosystem.config.js` 启动
+  - 后端改用编译产物：`script: 'node', args: 'dist/server.js'`（ts-node-dev bash脚本在Windows会崩溃）
+- 每次改后端代码后需先 `npm run build`，再 `pm2 restart storygame-backend`
+- `pm2 start ecosystem.config.js` 启动
   - `pm2 restart all` / `pm2 restart storygame-backend` 重启
   - `pm2 stop all` 停止
   - `pm2 list` 查状态，`pm2 logs` 看日志

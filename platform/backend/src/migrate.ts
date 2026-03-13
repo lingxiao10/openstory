@@ -8,6 +8,8 @@ const DB_PASSWORD = secret.db?.password || '123456';
 const DB_NAME = secret.db?.database || 'storygame';
 
 const migrations: string[] = [
+  `ALTER TABLE stories ADD COLUMN player_name VARCHAR(100) NOT NULL DEFAULT ''`,
+  `ALTER TABLE stories ADD COLUMN ai_model VARCHAR(100) NOT NULL DEFAULT 'deepseek-v3-2-251201'`,
   `ALTER TABLE chapters ADD COLUMN generating_at DATETIME NULL DEFAULT NULL`,
   `ALTER TABLE chapters ADD COLUMN content_json LONGTEXT NULL`,
   `ALTER TABLE chapters ADD COLUMN outline_en TEXT`,

@@ -24,8 +24,9 @@ export class AuthController {
       if (!username || !email || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
-      const token = await AuthService.register(username, email, password, lang, code);
-      res.json({ token });
+      const result = await AuthService.register(username, email, password, lang, code);
+      const isAdmin = !!(config.adminEmail && result.user.email === config.adminEmail);
+      res.json({ token: result.token, user: { ...result.user, isAdmin } });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }

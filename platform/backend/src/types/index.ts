@@ -18,6 +18,8 @@ export interface Story {
   genre: 'mystery' | 'numeric';
   status: 'draft' | 'generating' | 'published';
   created_at: Date;
+  player_name?: string;
+  ai_model?: string;
 }
 
 export interface Chapter {

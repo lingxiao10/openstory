@@ -62,11 +62,14 @@ export const translations = {
   story_generatingOutline: { zh: 'AI 生成章节大纲中...', en: 'Generating outlines...' },
 
   // reader
-  reader_select:    { zh: '选择章节开始阅读', en: 'Select a chapter to start' },
-  reader_locked:    { zh: '通关上一章解锁',   en: 'Complete previous chapter to unlock' },
-  reader_done:      { zh: '已通关',           en: 'Completed' },
-  reader_complete:  { zh: '完成本章',         en: 'Complete Chapter' },
-  reader_chapters:  { zh: '章',              en: 'ch.' },
+  reader_select:      { zh: '选择章节开始阅读', en: 'Select a chapter to start' },
+  reader_locked:      { zh: '通关上一章解锁',   en: 'Complete previous chapter to unlock' },
+  reader_done:        { zh: '已通关',           en: 'Completed' },
+  reader_complete:    { zh: '完成本章',         en: 'Complete Chapter' },
+  reader_chapters:    { zh: '章',              en: 'ch.' },
+  reader_chapter:     { zh: '第 {n} 章',        en: 'Chapter {n}' },
+  reader_interactive: { zh: '⚡ 互动小说',      en: '⚡ Interactive' },
+  reader_unpublished: { zh: '● 未发布',         en: '● Unpublished' },
 
   // game engine
   game_correct:         { zh: '正确！',           en: 'Correct!' },

@@ -33,6 +33,10 @@ function fixJson(s: string): string {
 
 const GENERATE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
+function getProvider(model: string): 'ark' | 'openrouter' {
+  return model.startsWith('google/') ? 'openrouter' : 'ark';
+}
+
 export class AIService {
   /** 当前正在生成的章节流式文本，key=chapterId */
   static readonly genProgress = new Map<string, string>();
@@ -91,7 +95,7 @@ export class AIService {
     });
 
     try {
-      logger.info(`[Generate] calling AI (genre=${story.genre})...`);
+      logger.info(`[Generate] calling AI (genre=${story.genre}) model=${story.ai_model || 'default'}...`);
       const t1 = Date.now();
       const totalChapters = allChapters.length;
       const chapterNum = chapter.chapter_num;
@@ -161,21 +165,27 @@ export class AIService {
    */
   static async generateStoryOutlines(story: Story, count: number, progressKey?: string): Promise<Array<{ zh: string; en: string }>> {
     const isNumeric = story.genre === 'numeric';
+    const playerName = story.player_name?.trim() || '';
+    const playerPrompt = playerName
+      ? `\n玩家控制的角色是：${playerName}，以第三人称（${playerName}）的视角来生成互动小说，注意，所有的选择决定都以玩家角色视角来面对和决定的。`
+      : '';
     const prompt = `你是网文编剧，为以下故事生成${count}个章节大纲。直接输出 JSON 数组，不要任何说明或 markdown。
 故事：${story.title_zh}
 背景：${story.background_zh || '无'}
-类型：${isNumeric ? '数值选择' : '解谜推理'}
+类型：${isNumeric ? '数值选择' : '解谜推理'}${playerPrompt}
 要求：
 - 大纲文字中不要包含"第X章"等章节序号，只写情节内容
 - 第2章起每章必须和前一章高度衔接，情节连贯推进，不得跳跃或重复
 - 每章大纲需详尽具体，约500字，把本章的人物行动、关键事件、场景氛围、情节转折、人物心理都交代清楚，让读者清楚知道这章会发生什么
 输出格式（共${count}个元素）：[{"zh":"详尽大纲约500字","en":"detailed outline about 500 words"},...]`;
 
+    const aiModel = story.ai_model || 'deepseek-v3-2-251201';
+    const provider = getProvider(aiModel);
     const maxTokens = count * 1200;
     if (progressKey) AIService.genProgress.set(progressKey, '');
     let raw: string;
     try {
-      raw = await AIService.callAI(prompt, 'ark', maxTokens, 'deepseek-v3-2-251201', progressKey);
+      raw = await AIService.callAI(prompt, provider, maxTokens, aiModel, progressKey);
     } finally {
       AIService.genProgress.delete(progressKey ?? '');
     }
@@ -214,13 +224,18 @@ export class AIService {
       ? `【本章是全书最后一章，必须给出完整的故事结局，彻底收束所有主线剧情。】`
       : `【本章不是故事结尾（${chapterProgress}），绝对不要结束或终结故事，不要有"最终"、"从此"等终结性描述，本章内容只推进情节，为后续章节铺垫。】`;
 
+    const playerName = story.player_name?.trim() || '';
+    const playerPrompt = playerName
+      ? `\n玩家控制的角色是：${playerName}，以第三人称（${playerName}）的视角来生成互动小说，注意，所有的选择决定都以玩家角色视角来面对和决定的。`
+      : '';
+
     const prompt = `你是网文作者，负责生成数值型互动故事 JSON。直接输出 JSON，不要任何说明。
 
 故事：${story.title_zh}
 背景：${story.background_zh}
 当前章节：${chapterProgress}
 本章大纲：${outlineZh}
-${endingInstruction}
+${endingInstruction}${playerPrompt}
 ${prevContext}
 内容范围要求（最重要，必须严格遵守）：
 - 所有 story 节点和 choice 节点的内容，必须严格局限于【本章大纲】所描述的情节范围之内
@@ -282,7 +297,8 @@ ${prevContext}
 
 输出：`;
 
-    const raw = await AIService.callAI(prompt, 'ark', 16000, 'deepseek-v3-2-251201', progressKey);
+    const aiModel = story.ai_model || 'deepseek-v3-2-251201';
+    const raw = await AIService.callAI(prompt, getProvider(aiModel), 16000, aiModel, progressKey);
     logger.info(`[NumericJson] raw length=${raw.length}, preview="${raw.slice(0, 120).replace(/\n/g, '↵')}"`);
     let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     cleaned = cleaned.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F]/g, ' ');
@@ -351,13 +367,18 @@ ${prevContext}
       ? `【本章是全书最后一章，必须给出完整的故事结局，彻底揭晓谜底并收束所有主线剧情。】`
       : `【本章不是故事结尾（${chapterProgress}），绝对不要结束或终结故事，不要有"最终"、"从此"等终结性描述，本章内容只推进情节，为后续章节铺垫。】`;
 
+    const playerName = story.player_name?.trim() || '';
+    const playerPrompt = playerName
+      ? `\n玩家控制的角色是：${playerName}，以第三人称（${playerName}）的视角来生成互动小说，注意，所有的选择决定都以玩家角色视角来面对和决定的。`
+      : '';
+
     const prompt = `你是网文作者，负责生成互动小说 JSON。直接输出 JSON，不要任何说明。
 
 故事：${story.title_zh}
 背景：${story.background_zh}
 当前章节：${chapterProgress}
 本章大纲：${outlineZh}
-${endingInstruction}
+${endingInstruction}${playerPrompt}
 ${prevContext}
 内容范围要求（最重要，必须严格遵守）：
 - 所有 story 节点和 choice 节点的内容，必须严格局限于【本章大纲】所描述的情节范围之内
@@ -382,8 +403,8 @@ JSON 格式规则：
 
 输出：`;
 
-    // deepseek-v3 对结构化 JSON 输出更精准
-    const raw = await AIService.callAI(prompt, 'ark', 6000, 'deepseek-v3-2-251201', progressKey);
+    const aiModel = story.ai_model || 'deepseek-v3-2-251201';
+    const raw = await AIService.callAI(prompt, getProvider(aiModel), 6000, aiModel, progressKey);
     logger.info(`[InteractiveJson] raw length=${raw.length}, preview="${raw.slice(0, 120).replace(/\n/g, '↵')}"`);
 
     // 清理 markdown 包裹和控制字符
@@ -468,6 +489,11 @@ JSON 格式规则：
       return content;
     }
 
+    const orModel = model || config.ai.model;
+    const slog = createStreamLogger(orModel.split('/').pop()?.split('-')[0] ?? 'or');
+    slog.info(`openrouter model=${orModel} maxTokens=${maxTokens}`);
+    slog.info(`prompt preview: ${prompt.slice(0, 200).replace(/\n/g, '↵')}`);
+
     const response = await fetch(`${config.openrouter.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -475,19 +501,55 @@ JSON 格式规则：
         Authorization: `Bearer ${config.openrouter.apiKey}`,
       },
       body: JSON.stringify({
-        model: config.ai.model,
+        model: orModel,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: maxTokens,
         temperature: 0.8,
+        stream: true,
       }),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`AI API error: ${err}`);
+      slog.error(`request failed: ${err.slice(0, 200)}`);
+      throw new Error(`OpenRouter API error: ${err}`);
     }
 
-    const data = (await response.json()) as any;
-    return data.choices?.[0]?.message?.content || '';
+    if (!response.body) throw new Error('OpenRouter returned no response body');
+
+    let content = '';
+    const reader = (response.body as any).getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let lastLogAt = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            content += delta;
+            if (progressKey) AIService.genProgress.set(progressKey, content);
+            if (content.length - lastLogAt >= 200) {
+              lastLogAt = content.length;
+              slog.info(`received ${content.length} chars so far...`);
+            }
+          }
+        } catch { /* ignore malformed SSE lines */ }
+      }
+    }
+
+    slog.info(`complete, total=${content.length} chars`);
+    slog.info(`response preview: ${content.slice(0, 200).replace(/\n/g, '↵')}`);
+    return content;
   }
 }

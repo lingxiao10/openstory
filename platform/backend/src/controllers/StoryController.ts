@@ -1,16 +1,25 @@
 import { Request, Response } from 'express';
 import { StoryService } from '../services/StoryService';
 
+const creatingSet = new Set<string>();
+
 export class StoryController {
   static async create(req: Request, res: Response) {
+    const userId = req.user!.userId;
+    if (creatingSet.has(userId)) {
+      return res.status(409).json({ error: '正在创建中，请勿重复提交 / Already creating, please wait' });
+    }
+    creatingSet.add(userId);
     try {
-      const { title, genre, background, chapterCount, progressKey } = req.body;
+      const { title, genre, background, chapterCount, progressKey, playerName, aiModel } = req.body;
       if (!title || !genre) return res.status(400).json({ error: 'Missing required fields' });
       const count = typeof chapterCount === 'number' ? chapterCount : 0;
-      const id = await StoryService.createStory(req.user!.userId, title, genre, background || '', count, progressKey || undefined);
+      const id = await StoryService.createStory(userId, title, genre, background || '', count, progressKey || undefined, playerName || '', aiModel || 'deepseek-v3-2-251201');
       res.status(201).json({ id });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
+    } finally {
+      creatingSet.delete(userId);
     }
   }
 

@@ -43,7 +43,10 @@ export class AuthService {
     const id = uuidv4();
     await UserModel.create({ id, username, email, password_hash, lang });
 
-    return this.generateToken({ userId: id, username });
+    return {
+      token: this.generateToken({ userId: id, username }),
+      user: { id, username, email, lang },
+    };
   }
 
   static async login(email: string, password: string) {

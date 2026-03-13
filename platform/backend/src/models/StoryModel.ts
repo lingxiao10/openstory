@@ -17,8 +17,8 @@ export class StoryModel {
 
   static async create(story: Omit<Story, 'created_at'>): Promise<void> {
     await pool.execute(
-      'INSERT INTO stories (id, user_id, title_zh, title_en, background_zh, background_en, genre, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [story.id, story.user_id, story.title_zh, story.title_en, story.background_zh || '', story.background_en || '', story.genre, story.status]
+      'INSERT INTO stories (id, user_id, title_zh, title_en, background_zh, background_en, genre, status, player_name, ai_model) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [story.id, story.user_id, story.title_zh, story.title_en, story.background_zh || '', story.background_en || '', story.genre, story.status, story.player_name || '', story.ai_model || 'deepseek-v3-2-251201']
     );
   }
 

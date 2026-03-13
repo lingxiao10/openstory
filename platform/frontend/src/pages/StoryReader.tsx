@@ -4,12 +4,16 @@ import { queryWork } from '../api/queryWork';
 import { AuthContext } from '../store/authStore';
 import { useI18n } from '../i18n';
 import { MysteryEngine } from '../games/mystery/MysteryEngine';
+import { MysteryCardEngine } from '../games/mystery/MysteryCardEngine';
 import { NumericEngine } from '../games/numeric/NumericEngine';
+
+type Theme = 'classic' | 'card';
 
 interface Chapter {
   id: string;
   chapter_num: number;
   outline_zh: string;
+  outline_en: string;
   content_zh: string;
   content_en: string;
   content_json: string | null;
@@ -39,6 +43,15 @@ export function StoryReader() {
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem('story_theme') as Theme) || 'card'
+  );
+
+  const toggleTheme = () => {
+    const next: Theme = theme === 'classic' ? 'card' : 'classic';
+    setTheme(next);
+    localStorage.setItem('story_theme', next);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -97,15 +110,24 @@ export function StoryReader() {
       try {
         const parsed = JSON.parse(activeChapter.content_json);
         if (story.genre === 'numeric') {
-          // numeric: GameData object with cards array
           if (parsed && Array.isArray(parsed.cards) && parsed.cards.length > 0) gameData = parsed;
         } else {
-          // mystery: plain array of nodes
           if (Array.isArray(parsed) && parsed.length > 0) gameData = { cards: parsed };
         }
       } catch { /* ignore */ }
 
       if (gameData) {
+        // Card theme: MysteryCardEngine is fully self-contained with back button
+        if (story.genre === 'mystery' && theme === 'card') {
+          return (
+            <MysteryCardEngine
+              gameData={gameData}
+              onVictory={isDone ? undefined : () => completeChapter(activeChapter)}
+              onBack={() => setActiveChapter(null)}
+            />
+          );
+        }
+
         return (
           <div style={rootStyle}>
             <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -135,7 +157,7 @@ export function StoryReader() {
         <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 20px 80px' }}>
           <button onClick={() => setActiveChapter(null)} style={backBtnStyle}>← {t('game_back')}</button>
           <div style={{ textAlign: 'center', color: '#6366f1', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 24 }}>
-            {title} · 第{activeChapter.chapter_num}章
+            {title} · {t('reader_chapter').replace('{n}', String(activeChapter.chapter_num))}
           </div>
           <div style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 2, whiteSpace: 'pre-wrap', fontFamily: 'Georgia, serif' }}>
             {content}
@@ -158,7 +180,14 @@ export function StoryReader() {
   return (
     <div style={rootStyle}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 20px 80px' }}>
-        <button onClick={() => navigate(-1)} style={backBtnStyle}>← {t('game_back')}</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <button onClick={() => navigate(-1)} style={backBtnStyle}>← {t('game_back')}</button>
+          {story.genre === 'mystery' && (
+            <button onClick={toggleTheme} style={themeBtnStyle} title="切换展示风格">
+              {theme === 'classic' ? '🃏 卡片风格' : '📖 经典风格'}
+            </button>
+          )}
+        </div>
 
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <h1 style={{ color: '#e2e8f0', fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>{title}</h1>
@@ -191,17 +220,22 @@ export function StoryReader() {
               >
                 <div>
                   <div style={{ color: locked ? '#475569' : isDone ? '#86efac' : '#e2e8f0', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
-                    第 {ch.chapter_num} 章
+                    {t('reader_chapter').replace('{n}', String(ch.chapter_num))}
                   </div>
-                  <div style={{ color: '#64748b', fontSize: 12 }}>{ch.outline_zh}</div>
+                  <div style={{ color: '#64748b', fontSize: 12 }}>
+                    {(() => {
+                      const outline = (lang === 'en' && ch.outline_en) ? ch.outline_en : ch.outline_zh;
+                      return outline && outline.length > 30 ? outline.slice(0, 30) + '…' : outline;
+                    })()}
+                  </div>
                   {ch.content_json && (
-                    <div style={{ color: '#6366f1', fontSize: 11, marginTop: 4 }}>⚡ 互动小说</div>
+                    <div style={{ color: '#6366f1', fontSize: 11, marginTop: 4 }}>{t('reader_interactive')}</div>
                   )}
                   {isOwner && !ch.published && (
-                    <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>● 未发布</div>
+                    <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>{t('reader_unpublished')}</div>
                   )}
                 </div>
-                <div style={{ fontSize: 18, flexShrink: 0, marginLeft: 12 }}>
+                <div style={{ fontSize: 18, flexShrink: 0, marginLeft: 12, color: '#ffffff' }}>
                   {locked ? '🔒' : isDone ? '✓' : '▶'}
                 </div>
               </button>
@@ -225,4 +259,9 @@ const backBtnStyle: React.CSSProperties = {
 const completeBtnStyle: React.CSSProperties = {
   background: '#6366f1', color: '#fff', border: 'none', borderRadius: 12,
   padding: '14px 40px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+};
+const themeBtnStyle: React.CSSProperties = {
+  background: 'none', border: '1px solid #334155', color: '#94a3b8',
+  cursor: 'pointer', fontSize: 12, padding: '6px 12px',
+  borderRadius: 8, transition: 'all 0.2s',
 };

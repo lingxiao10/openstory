@@ -4,12 +4,21 @@
 
 ---
 
+## 🌐 Live Demo
+
+> **[https://openstory.xfeixie.com/](https://openstory.xfeixie.com/)**
+> <ins>Try the live platform powered by this open-source project</ins>
+
+---
+
 <a name="english"></a>
 ## English
 
 ### What is OpenStory?
 
 OpenStory is an open-source interactive story game platform. Players can explore mystery card games and numeric choice adventures, and creators can build and share their own story games.
+
+> **Live platform:** <ins>[https://openstory.xfeixie.com/](https://openstory.xfeixie.com/)</ins>
 
 ### Features
 
@@ -103,6 +112,8 @@ Licensed under the [Apache License 2.0](LICENSE).
 ### 什么是 OpenStory？
 
 OpenStory 是一个开源互动故事游戏平台。玩家可以体验推理卡牌游戏和数值选择冒险，创作者可以构建并分享自己的故事游戏。
+
+> **在线体验：** <ins>[https://openstory.xfeixie.com/](https://openstory.xfeixie.com/)</ins>
 
 ### 功能特性
 

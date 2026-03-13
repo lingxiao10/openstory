@@ -1,6 +1,197 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext, useRef, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// ─── Batch Create Modal ────────────────────────────────────────────────────
+interface BatchStorySlot {
+  id: number;
+  title: string;
+  bg: string;
+  playerName: string;
+  genre: 'mystery' | 'numeric';
+  aiModel: string;
+  chapterCount: number;
+  status: 'idle' | 'creating' | 'done' | 'error';
+  errorMsg: string;
+}
+
+let _batchId = 0;
+function mkSlot(): BatchStorySlot {
+  return { id: ++_batchId, title: '', bg: '', playerName: '', genre: 'mystery', aiModel: 'deepseek-v3-2-251201', chapterCount: 3, status: 'idle', errorMsg: '' };
+}
+
+function BatchCreateModal({ lang, token, onClose, onDone }: {
+  lang: string; token: string | null; onClose: () => void; onDone: () => void;
+}) {
+  const [slots, setSlots] = useState<BatchStorySlot[]>([mkSlot()]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const updSlot = (id: number, patch: Partial<BatchStorySlot>) =>
+    setSlots(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+
+  const addSlot = () => { if (slots.length < 5) setSlots(prev => [...prev, mkSlot()]); };
+  const removeSlot = (id: number) => { if (slots.length > 1) setSlots(prev => prev.filter(s => s.id !== id)); };
+
+  const allIdle = slots.every(s => s.status === 'idle');
+  const allDone = slots.every(s => s.status === 'done' || s.status === 'error');
+
+  const handleSubmit = async () => {
+    // validate
+    for (const s of slots) {
+      if (!s.title.trim() || !s.bg.trim()) return;
+    }
+    setSubmitting(true);
+    setSlots(prev => prev.map(s => ({ ...s, status: 'creating', errorMsg: '' })));
+
+    await Promise.allSettled(slots.map(async (s) => {
+      try {
+        await queryWork('/api/stories', {
+          method: 'POST',
+          body: { title: s.title, background: s.bg, genre: s.genre, chapterCount: s.chapterCount, playerName: s.playerName, aiModel: s.aiModel },
+          token,
+        });
+        updSlot(s.id, { status: 'done' });
+      } catch (e: any) {
+        updSlot(s.id, { status: 'error', errorMsg: e.message ?? 'error' });
+      }
+    }));
+
+    setSubmitting(false);
+    onDone();
+  };
+
+  return (
+    <div
+      onClick={() => { if (!submitting) onClose(); }}
+      style={{ position: 'fixed', inset: 0, background: '#000c', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 8px', overflowY: 'auto' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ background: '#0f172a', borderRadius: 20, border: '1px solid #334155', width: '100%', maxWidth: 680, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16, maxHeight: '90vh', overflowY: 'auto' }}
+      >
+        {/* header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ color: '#e2e8f0', fontWeight: 800, fontSize: 16 }}>
+              {lang === 'zh' ? '批量生成故事' : 'Batch Create Stories'}
+            </div>
+            <div style={{ color: '#475569', fontSize: 12, marginTop: 2 }}>
+              {lang === 'zh' ? `最多 5 个故事，并发生成` : 'Up to 5 stories, generated concurrently'}
+            </div>
+          </div>
+          <button onClick={onClose} disabled={submitting} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+
+        {/* slots */}
+        {slots.map((s, idx) => (
+          <div key={s.id} style={{ background: '#1e293b', borderRadius: 14, border: `1px solid ${s.status === 'done' ? '#22c55e44' : s.status === 'error' ? '#ef444444' : '#334155'}`, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* slot header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#6366f1', fontWeight: 700, fontSize: 13 }}>
+                {lang === 'zh' ? `故事 ${idx + 1}` : `Story ${idx + 1}`}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {s.status === 'creating' && <span style={{ color: '#f59e0b', fontSize: 12 }}>⚡ {lang === 'zh' ? '生成中...' : 'Creating...'}</span>}
+                {s.status === 'done' && <span style={{ color: '#22c55e', fontSize: 12 }}>✓ {lang === 'zh' ? '完成' : 'Done'}</span>}
+                {s.status === 'error' && <span style={{ color: '#ef4444', fontSize: 12 }} title={s.errorMsg}>✗ {lang === 'zh' ? '失败' : 'Failed'}</span>}
+                {slots.length > 1 && s.status === 'idle' && (
+                  <button onClick={() => removeSlot(s.id)} style={{ background: 'none', border: 'none', color: '#475569', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>×</button>
+                )}
+              </div>
+            </div>
+
+            {/* fields */}
+            <input
+              placeholder={lang === 'zh' ? '故事标题（必填）' : 'Story title (required)'}
+              value={s.title} onChange={e => updSlot(s.id, { title: e.target.value })}
+              disabled={s.status !== 'idle'} required style={{ ...inputStyle, fontSize: 13 }}
+            />
+            <input
+              placeholder={lang === 'zh' ? '故事背景简介（必填）' : 'Background summary (required)'}
+              value={s.bg} onChange={e => updSlot(s.id, { bg: e.target.value })}
+              disabled={s.status !== 'idle'} required style={{ ...inputStyle, fontSize: 13 }}
+            />
+            <input
+              placeholder={lang === 'zh' ? '玩家角色名字（选填）' : 'Player character name (optional)'}
+              value={s.playerName} onChange={e => updSlot(s.id, { playerName: e.target.value })}
+              disabled={s.status !== 'idle'} style={{ ...inputStyle, fontSize: 13 }}
+            />
+
+            {/* genre + chapterCount row */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <select
+                value={s.genre} onChange={e => updSlot(s.id, { genre: e.target.value as any })}
+                disabled={s.status !== 'idle'}
+                style={{ ...inputStyle, width: 'auto', fontSize: 12, padding: '6px 10px', cursor: 'pointer' }}
+              >
+                <option value="mystery">{lang === 'zh' ? '推理' : 'Mystery'}</option>
+                <option value="numeric">{lang === 'zh' ? '数字' : 'Numeric'}</option>
+              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 160 }}>
+                <span style={{ color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>
+                  {lang === 'zh' ? `${s.chapterCount} 章` : `${s.chapterCount} ch.`}
+                </span>
+                <input
+                  type="range" min={CHAPTER_COUNT_MIN} max={CHAPTER_COUNT_MAX} value={s.chapterCount}
+                  onChange={e => updSlot(s.id, { chapterCount: Number(e.target.value) })}
+                  disabled={s.status !== 'idle'}
+                  style={{ flex: 1, accentColor: '#6366f1' }}
+                />
+              </div>
+            </div>
+
+            {/* model picker */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {MODEL_OPTIONS.map(opt => (
+                <button
+                  key={opt.value} type="button"
+                  onClick={() => updSlot(s.id, { aiModel: opt.value })}
+                  disabled={s.status !== 'idle'}
+                  style={{ ...modelBtnStyle(s.aiModel === opt.value, opt.provider === 'openrouter'), fontSize: 11, padding: '4px 10px' }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {s.status === 'error' && s.errorMsg && (
+              <div style={{ color: '#ef4444', fontSize: 11 }}>{s.errorMsg}</div>
+            )}
+          </div>
+        ))}
+
+        {/* add slot + submit */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {slots.length < 5 && allIdle && (
+            <button
+              onClick={addSlot}
+              style={{ background: '#1e293b', color: '#94a3b8', border: '1px dashed #334155', borderRadius: 10, padding: '10px 18px', fontSize: 13, cursor: 'pointer', flex: 1 }}
+            >
+              + {lang === 'zh' ? '添加故事' : 'Add Story'} ({slots.length}/5)
+            </button>
+          )}
+          {!allDone && (
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || slots.some(s => !s.title.trim() || !s.bg.trim())}
+              style={{ ...btnStyle, flex: 2, opacity: (submitting || slots.some(s => !s.title.trim() || !s.bg.trim())) ? 0.5 : 1 }}
+            >
+              {submitting
+                ? (lang === 'zh' ? `生成中 (${slots.filter(s => s.status === 'creating').length}/${slots.length})...` : `Creating (${slots.filter(s => s.status === 'creating').length}/${slots.length})...`)
+                : (lang === 'zh' ? `并发生成 ${slots.length} 个故事` : `Create ${slots.length} Stories`)}
+            </button>
+          )}
+          {allDone && (
+            <button onClick={onClose} style={{ ...btnStyle, flex: 1, background: '#22c55e' }}>
+              {lang === 'zh' ? '完成，关闭' : 'Done, Close'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Gen Modal ─────────────────────────────────────────────────────────────
 function GenModal({ lang, onOne, onAll, showAll, onClose }: {
   lang: string; onOne: () => void; onAll: () => void; showAll: boolean; onClose: () => void;
 }) {
@@ -87,6 +278,13 @@ interface Story {
 const CHAPTER_COUNT_MIN = 1;
 const CHAPTER_COUNT_MAX = 5;
 
+const MODEL_OPTIONS = [
+  { value: 'deepseek-v3-2-251201', label: 'DeepSeek V3', provider: 'ark' },
+  { value: 'doubao-seed-1-8-251228', label: 'Doubao Seed 1.8', provider: 'ark' },
+  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'openrouter' },
+  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'openrouter' },
+] as const;
+
 export function MyStories() {
   const { token, isLoggedIn } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -94,11 +292,16 @@ export function MyStories() {
 
   const [stories, setStories] = useState<Story[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showBatch, setShowBatch] = useState(false);
   const [title, setTitle] = useState('');
   const [bg, setBg] = useState('');
   const [genre, setGenre] = useState<'mystery' | 'numeric'>('mystery');
   const [chapterCount, setChapterCount] = useState(3);
+  const [autoGenerate, setAutoGenerate] = useState(true);
+  const [playerName, setPlayerName] = useState('');
+  const [aiModel, setAiModel] = useState('deepseek-v3-2-251201');
   const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
   const [error, setError] = useState('');
   const [outlineGenText, setOutlineGenText] = useState('');
   const [outlineBoxVisible, setOutlineBoxVisible] = useState(false);
@@ -119,9 +322,12 @@ export function MyStories() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creatingRef.current) return;
+    creatingRef.current = true;
     setError(''); setCreating(true);
-    // 只在有章节数时才需要显示进度框
-    const needProgress = chapterCount > 0;
+    // 只在勾选了自动生成且有章节数时才需要显示进度框
+    const actualChapterCount = autoGenerate ? chapterCount : 0;
+    const needProgress = actualChapterCount > 0;
     const progressKey = needProgress ? `outline_${Date.now()}_${Math.random().toString(36).slice(2)}` : undefined;
     if (needProgress && progressKey) {
       if (outlineHideRef.current) { clearTimeout(outlineHideRef.current); outlineHideRef.current = null; }
@@ -139,14 +345,15 @@ export function MyStories() {
     try {
       await queryWork('/api/stories', {
         method: 'POST',
-        body: { title, background: bg, genre, chapterCount, progressKey },
+        body: { title, background: bg, genre, chapterCount: actualChapterCount, progressKey, playerName, aiModel },
         token,
       });
-      setTitle(''); setBg(''); setChapterCount(3);
+      setTitle(''); setBg(''); setChapterCount(3); setPlayerName(''); setAiModel('deepseek-v3-2-251201'); setAutoGenerate(true);
       setShowForm(false);
       load();
     } catch (err: any) { setError(err.message); }
     finally {
+      creatingRef.current = false;
       setCreating(false);
       if (outlinePollRef.current) { clearInterval(outlinePollRef.current); outlinePollRef.current = null; }
       outlineHideRef.current = setTimeout(() => { setOutlineBoxVisible(false); setOutlineGenText(''); }, 1000);
@@ -157,9 +364,17 @@ export function MyStories() {
     <Layout>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
         <h2 style={{ color: '#e2e8f0', margin: 0, fontSize: 24, fontWeight: 800 }}>{t('story_center')}</h2>
-        <button onClick={() => setShowForm(!showForm)} style={btnStyle}>
-          {showForm ? '×' : `+ ${t('story_create')}`}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => { setShowBatch(true); setShowForm(false); }}
+            style={{ ...btnStyle, background: '#0f172a', border: '1px solid #6366f155', color: '#a5b4fc', fontSize: 12 }}
+          >
+            {lang === 'zh' ? '批量生成' : 'Batch Create'}
+          </button>
+          <button onClick={() => setShowForm(!showForm)} style={btnStyle}>
+            {showForm ? '×' : `+ ${t('story_create')}`}
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -174,10 +389,48 @@ export function MyStories() {
               placeholder={lang === 'zh' ? '故事背景简介（必填，AI 自动翻译另一种语言）' : 'Background summary (required, AI auto-translates)'}
               value={bg} onChange={e => setBg(e.target.value)} required style={inputStyle}
             />
+            <div>
+              <input
+                placeholder={lang === 'zh' ? '玩家角色名字（如：李明、张三）' : 'Player character name (e.g. John)'}
+                value={playerName} onChange={e => setPlayerName(e.target.value)} style={inputStyle}
+              />
+              <div style={{ color: '#475569', fontSize: 11, marginTop: 4, paddingLeft: 2 }}>
+                {lang === 'zh' ? '这是玩家扮演的角色的名字，AI 将以该角色第三人称视角生成故事' : 'The character the player controls. AI generates from this character\'s perspective.'}
+              </div>
+            </div>
             <select value={genre} onChange={e => setGenre(e.target.value as any)} style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="mystery">{t('story_mystery')}</option>
               <option value="numeric">{t('story_numeric')}</option>
             </select>
+            <div>
+              <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 6 }}>
+                {lang === 'zh' ? 'AI 模型' : 'AI Model'}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {MODEL_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setAiModel(opt.value)}
+                    style={modelBtnStyle(aiModel === opt.value, opt.provider === 'openrouter')}
+                  >
+                    {opt.label}
+                    <span style={{ fontSize: 10, opacity: 0.7, marginLeft: 4 }}>({opt.provider})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
+              <input
+                type="checkbox" checked={autoGenerate}
+                onChange={e => setAutoGenerate(e.target.checked)}
+                style={{ accentColor: '#6366f1', width: 15, height: 15, cursor: 'pointer' }}
+              />
+              <span style={{ color: '#94a3b8', fontSize: 13 }}>
+                {lang === 'zh' ? '自动生成章节大纲' : 'Auto-generate chapter outlines'}
+              </span>
+            </label>
+            {autoGenerate && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <label style={{ color: '#94a3b8', fontSize: 13, whiteSpace: 'nowrap' }}>
                 {t('story_chapterCount')}：{chapterCount} {lang === 'zh' ? '章' : 'ch.'}
@@ -189,11 +442,21 @@ export function MyStories() {
               />
               <span style={{ color: '#64748b', fontSize: 12, whiteSpace: 'nowrap' }}>{CHAPTER_COUNT_MIN}–{CHAPTER_COUNT_MAX}</span>
             </div>
+            )}
             <button type="submit" disabled={creating} style={btnStyle}>
-              {creating ? t('story_generatingOutline') : t('story_create')}
+              {creating ? t('story_generatingOutline') : autoGenerate ? t('story_create') : (lang === 'zh' ? '创建故事' : 'Create Story')}
             </button>
           </form>
         </div>
+      )}
+
+      {showBatch && (
+        <BatchCreateModal
+          lang={lang}
+          token={token}
+          onClose={() => setShowBatch(false)}
+          onDone={() => { load(); }}
+        />
       )}
 
       {outlineBoxVisible && (
@@ -735,4 +998,10 @@ const btnStyle: React.CSSProperties = {
 const smallBtn = (color: string): React.CSSProperties => ({
   background: `${color}22`, color, border: `1px solid ${color}44`,
   borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+});
+const modelBtnStyle = (active: boolean, isOpenRouter: boolean): CSSProperties => ({
+  background: active ? (isOpenRouter ? '#0891b222' : '#6366f122') : '#0f172a',
+  color: active ? (isOpenRouter ? '#22d3ee' : '#a5b4fc') : '#64748b',
+  border: `1px solid ${active ? (isOpenRouter ? '#0891b244' : '#6366f144') : '#1e293b'}`,
+  borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: active ? 700 : 400,
 });
