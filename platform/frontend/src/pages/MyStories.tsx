@@ -456,6 +456,12 @@ export function MyStories() {
   useEffect(() => {
     if (!isLoggedIn) { navigate('/login'); return; }
     load();
+    // Auto-open QuickCreate if redirected from home with ?quick=1
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('quick') === '1') {
+      setShowQuickCreate(true);
+      window.history.replaceState({}, '', '/my-stories');
+    }
   }, [isLoggedIn]);
 
   const load = async () => {

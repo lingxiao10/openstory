@@ -77,6 +77,23 @@ export function Home() {
         <p style={{ color: '#64748b', fontSize: 16, marginBottom: 28 }}>{t('home_subtitle')}</p>
 
         <button
+          onClick={() => navigate('/my-stories?quick=1')}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            padding: '14px 36px', borderRadius: 14,
+            border: '1px solid rgba(34,197,94,0.4)', cursor: 'pointer',
+            background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.12))',
+            color: '#4ade80', fontWeight: 700, fontSize: 16, letterSpacing: 0.5,
+            backdropFilter: 'blur(8px)', transition: 'all 0.25s', marginRight: 12,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(34,197,94,0.25),rgba(16,185,129,0.25))'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(34,197,94,0.12),rgba(16,185,129,0.12))'; }}
+        >
+          <span style={{ fontSize: 18 }}>⚡</span>
+          {lang === 'zh' ? '边看边生成' : 'Play While Generating'}
+        </button>
+
+        <button
           className="generate-btn"
           onClick={() => navigate('/create')}
           style={{
