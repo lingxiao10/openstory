@@ -110,7 +110,8 @@
   - 白色调（light）：羊皮纸底 `#F4EAD5`，深棕字 `#2C1810`，米白背景
   - 切换按钮位于右上角（lives旁）：`☀ 白色调` / `☾ 暗色调`
 - 接口与 `MysteryEngine` 相同：`{ gameData, onVictory?, onBack? }`
-- numeric 类型暂不支持卡片风格
+- numeric 类型已支持卡片风格：深蓝底 `#0f172a`，靛紫边框 `#6366f1`，corner装饰，淡入动画
+  - 移动端微旋转（max ±0.8°，ROTS数组），PC/Mac（`pointer:fine`）不旋转
 
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`

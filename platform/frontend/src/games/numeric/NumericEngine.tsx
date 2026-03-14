@@ -50,19 +50,38 @@ function getInitialStats(statDefs: Record<string, StatDef>): Record<string, numb
   return Object.fromEntries(Object.keys(statDefs).map(k => [k, 10]));
 }
 
+// Smaller rotation values for subtle tilt on mobile
+const ROTS = [-0.6, 0.5, -0.3, 0.7, -0.8, 0.4, 0.6, -0.5, 0.8, -0.3, 0.4, -0.7, -0.2, 0.6, -0.5, 0.3];
+const getRot = (i: number) => ROTS[((i % ROTS.length) + ROTS.length) % ROTS.length];
+
+const CARD_CSS = `
+  @keyframes numCardIn {
+    from { opacity: 0; transform: translateY(14px) rotate(var(--card-r, 0deg)); }
+    to   { opacity: 1; transform: translateY(0)   rotate(var(--card-r, 0deg)); }
+  }
+`;
+
 export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
-  const { t, tf, lang } = useI18n();
+  const { t, tf } = useI18n();
   const [stats, setStats] = useState<Record<string, number>>(() => getInitialStats(gameData.statDefs || {}));
   const [items, setItems] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
+  const [cardKey, setCardKey] = useState(0);
   const [narrative, setNarrative] = useState('');
   const [lastEffects, setLastEffects] = useState<Record<string, number>>({});
   const [lastItem, setLastItem] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
   const [win, setWin] = useState(false);
 
+  // Detect desktop (mouse/trackpad) — no rotation on desktop
+  const isDesktop = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches,
+    []
+  );
+
   const data = gameData.cards || [];
   const card = data[index] as StoryCard | undefined;
+  const rot = isDesktop ? 0 : getRot(index);
 
   // Shuffle choices once per card index to randomize option order each encounter
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -81,7 +100,6 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
         newStats[k] = Math.max(0, (newStats[k] || 0) + v);
       }
     }
-    // Apply bonus if item condition met
     if (choice.bonusIf && items.includes(choice.bonusIf.item)) {
       for (const [k, v] of Object.entries(choice.bonusIf.bonus)) {
         if (v !== 0) combined[k] = (combined[k] || 0) + v;
@@ -105,6 +123,7 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
       setWin(true);
     } else {
       setIndex(nextIndex);
+      setCardKey(k => k + 1);
     }
   };
 
@@ -115,12 +134,14 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
     const nextIndex = index + 1;
     if (nextIndex >= data.length || data[nextIndex]?.type === 'end') { setWin(true); return; }
     setIndex(nextIndex);
+    setCardKey(k => k + 1);
   };
 
   const restart = () => {
     setStats(getInitialStats(gameData.statDefs || {}));
     setItems([]);
     setIndex(0);
+    setCardKey(k => k + 1);
     setNarrative('');
     setLastEffects({});
     setLastItem(null);
@@ -130,6 +151,7 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '20px 20px 80px', fontFamily: 'system-ui, sans-serif' }}>
+      <style>{CARD_CSS}</style>
 
       {/* Stats bar */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
@@ -158,10 +180,13 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
 
       {/* Narrative after choice */}
       {narrative && (
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 18px', marginBottom: 16, color: '#a5b4fc', fontSize: 14, lineHeight: 1.8 }}>
-          <div>{narrative}</div>
+        <div style={{ position: 'relative', background: '#0f172a', border: '1px solid #6366f133', borderRadius: 8, padding: '14px 18px', marginBottom: 16 }}>
+          {/* corner decorations */}
+          <div style={{ position: 'absolute', top: 8, left: 8, width: 12, height: 12, borderTop: '1.5px solid #6366f166', borderLeft: '1.5px solid #6366f166' }} />
+          <div style={{ position: 'absolute', bottom: 8, right: 8, width: 12, height: 12, borderBottom: '1.5px solid #6366f166', borderRight: '1.5px solid #6366f166' }} />
+          <div style={{ color: '#a5b4fc', fontSize: 14, lineHeight: 1.8 }}>{narrative}</div>
           {(Object.keys(lastEffects).length > 0 || lastItem) && (
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #334155', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #6366f122', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {Object.entries(lastEffects).map(([k, v]) => {
                 const def = gameData.statDefs?.[k];
                 const name = def ? tf(def.name) : k;
@@ -191,13 +216,17 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
       )}
 
       {gameOver ? (
-        <div style={{ background: '#1e293b', borderRadius: 16, padding: 32, textAlign: 'center' }}>
+        <div style={{ position: 'relative', background: '#0f172a', border: '1px solid #ef444433', borderRadius: 8, padding: 32, textAlign: 'center' }}>
+          <div style={{ position: 'absolute', top: 10, left: 10, width: 16, height: 16, borderTop: '1.5px solid #ef444466', borderLeft: '1.5px solid #ef444466' }} />
+          <div style={{ position: 'absolute', bottom: 10, right: 10, width: 16, height: 16, borderBottom: '1.5px solid #ef444466', borderRight: '1.5px solid #ef444466' }} />
           <div style={{ fontSize: 48, marginBottom: 16 }}>💀</div>
           <h3 style={{ color: '#ef4444', marginBottom: 16 }}>{t('game_over')}</h3>
           <button onClick={restart} style={restartBtnStyle}>{t('game_tryAgain')}</button>
         </div>
       ) : win ? (
-        <div style={{ background: '#1e293b', borderRadius: 16, padding: 32, textAlign: 'center' }}>
+        <div style={{ position: 'relative', background: '#0f172a', border: '1px solid #22c55e33', borderRadius: 8, padding: 32, textAlign: 'center' }}>
+          <div style={{ position: 'absolute', top: 10, left: 10, width: 16, height: 16, borderTop: '1.5px solid #22c55e66', borderLeft: '1.5px solid #22c55e66' }} />
+          <div style={{ position: 'absolute', bottom: 10, right: 10, width: 16, height: 16, borderBottom: '1.5px solid #22c55e66', borderRight: '1.5px solid #22c55e66' }} />
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
           <h3 style={{ color: '#22c55e', marginBottom: 16 }}>{gameData.winText ? tf(gameData.winText) : t('game_win')}</h3>
           <button onClick={onVictory} style={{ ...restartBtnStyle, background: '#22c55e' }}>
@@ -205,40 +234,61 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
           </button>
         </div>
       ) : card ? (
-        <>
-          {card.act && (
-            <div style={{ color: '#6366f1', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16, textAlign: 'center' }}>
-              {tf(card.act)}
-            </div>
-          )}
+        <div
+          key={cardKey}
+          style={{
+            position: 'relative',
+            background: '#0f172a',
+            border: '1px solid #6366f144',
+            borderRadius: 8,
+            padding: 0,
+            transform: `rotate(${rot}deg)`,
+            ['--card-r' as string]: `${rot}deg`,
+            animation: 'numCardIn .45s cubic-bezier(.22,.68,0,1.2)',
+            boxShadow: '0 4px 24px #6366f118, 0 8px 40px #00000055',
+          }}
+        >
+          {/* Corner decorations */}
+          <div style={{ position: 'absolute', top: 10, left: 10, width: 16, height: 16, borderTop: '1.5px solid #6366f155', borderLeft: '1.5px solid #6366f155', borderTopLeftRadius: 2 }} />
+          <div style={{ position: 'absolute', bottom: 10, right: 10, width: 16, height: 16, borderBottom: '1.5px solid #6366f155', borderRight: '1.5px solid #6366f155', borderBottomRightRadius: 2 }} />
 
-          {card.type === 'story' && (
-            <>
-              <p style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 1.9, marginBottom: 24 }}>{tf(card.text)}</p>
-              <button onClick={advance} style={nextBtnStyle}>▶</button>
-            </>
-          )}
+          <div style={{ margin: 8, border: '1px solid #6366f11a', borderRadius: 4, padding: '28px 24px', minHeight: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
-          {card.type === 'choice' && (
-            <>
-              <p style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 1.9, marginBottom: 24 }}>{tf(card.text)}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {shuffledChoices.map((choice, i) => (
-                  <button
-                    key={i}
-                    onClick={() => applyChoice(choice)}
-                    style={choiceBtnStyle}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#6366f1'; (e.currentTarget as HTMLElement).style.background = '#6366f111'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#334155'; (e.currentTarget as HTMLElement).style.background = '#1e293b'; }}
-                  >
-                    <span style={{ color: '#6366f1', marginRight: 8, fontWeight: 700 }}>{String.fromCharCode(65 + i)}.</span>
-                    {tf(choice.label)}
-                  </button>
-                ))}
+            {card.act && (
+              <div style={{ color: '#6366f1', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16, textAlign: 'center', opacity: 0.8 }}>
+                {tf(card.act)}
               </div>
-            </>
-          )}
-        </>
+            )}
+
+            {card.type === 'story' && (
+              <>
+                <p style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 1.9, marginBottom: 24, textAlign: 'center', letterSpacing: '0.03em' }}>{tf(card.text)}</p>
+                <button onClick={advance} style={nextBtnStyle}>▶</button>
+              </>
+            )}
+
+            {card.type === 'choice' && (
+              <>
+                <p style={{ color: '#e2e8f0', fontSize: 16, lineHeight: 1.9, marginBottom: 24, textAlign: 'center', letterSpacing: '0.03em' }}>{tf(card.text)}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                  {shuffledChoices.map((choice, i) => (
+                    <button
+                      key={i}
+                      onClick={() => applyChoice(choice)}
+                      style={choiceBtnStyle}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#6366f1'; (e.currentTarget as HTMLElement).style.background = '#6366f111'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#6366f133'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <span style={{ color: '#6366f1', marginRight: 8, fontWeight: 700 }}>{String.fromCharCode(65 + i)}.</span>
+                      {tf(choice.label)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
       ) : null}
 
     </div>
@@ -249,7 +299,7 @@ const nextBtnStyle: React.CSSProperties = {
   background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 32px', fontSize: 15, cursor: 'pointer',
 };
 const choiceBtnStyle: React.CSSProperties = {
-  background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '14px 20px',
+  background: 'transparent', border: '1px solid #6366f133', borderRadius: 6, padding: '14px 20px',
   color: '#e2e8f0', fontSize: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'system-ui, sans-serif',
 };
 const restartBtnStyle: React.CSSProperties = {
