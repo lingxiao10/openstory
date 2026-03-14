@@ -8,6 +8,7 @@ import { Register } from './pages/Register';
 import { MyStories } from './pages/MyStories';
 import { StoryReader } from './pages/StoryReader';
 import { Admin } from './pages/Admin';
+import { StreamGamePage } from './pages/StreamGamePage';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/my-stories" element={<MyStories />} />
             <Route path="/create" element={<Navigate to="/my-stories" replace />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/stream-game/:storyId" element={<StreamGamePage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

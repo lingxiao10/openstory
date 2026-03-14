@@ -454,7 +454,7 @@ JSON 格式规则：
     );
   }
 
-  static async callAI(prompt: string, provider: 'ark' | 'openrouter' = 'ark', maxTokens = 1000, model?: string, progressKey?: string): Promise<string> {
+  static async callAI(prompt: string, provider: 'ark' | 'openrouter' = 'ark', maxTokens = 1000, model?: string, progressKey?: string, onChunk?: (delta: string) => void): Promise<string> {
     if (provider === 'ark') {
       const arkClient = new ArkClient(config.ai.apiKey, config.ai.baseUrl);
       const slog = createStreamLogger(model?.split('-')[0] ?? 'ark');
@@ -470,8 +470,9 @@ JSON 格式规则：
             maxTokens,
             temperature: 0.8,
             timeoutMs: 600000,
-            onChunk: (_delta, total) => {
+            onChunk: (delta, total) => {
               if (progressKey) AIService.genProgress.set(progressKey, total);
+              if (onChunk && delta) onChunk(delta);
               if (total.length - lastLogAt >= 200) {
                 lastLogAt = total.length;
                 slog.info(`received ${total.length} chars so far...`);
@@ -539,6 +540,7 @@ JSON 格式规则：
           if (delta) {
             content += delta;
             if (progressKey) AIService.genProgress.set(progressKey, content);
+            if (onChunk) onChunk(delta);
             if (content.length - lastLogAt >= 200) {
               lastLogAt = content.length;
               slog.info(`received ${content.length} chars so far...`);

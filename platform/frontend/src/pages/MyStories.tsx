@@ -1,6 +1,150 @@
 import { useState, useEffect, useContext, useRef, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// ─── QuickPlay Modal ("边看边生成") ────────────────────────────────────────────
+const QUICK_MODEL_OPTIONS = [
+  { value: 'deepseek-v3-2-251201', label: 'DeepSeek V3', provider: 'ark' },
+  { value: 'doubao-seed-1-8-251228', label: 'Doubao 1.8', provider: 'ark' },
+  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'openrouter' },
+  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'openrouter' },
+] as const;
+
+function QuickCreateModal({ lang, token, onClose }: {
+  lang: string; token: string | null; onClose: () => void;
+}) {
+  const navigate = useNavigate();
+  const [title, setTitle] = useState('');
+  const [bg, setBg] = useState('');
+  const [playerName, setPlayerName] = useState('');
+  const [genre, setGenre] = useState<'mystery' | 'numeric'>('mystery');
+  const [chapterCount, setChapterCount] = useState(2);
+  const [aiModel, setAiModel] = useState('deepseek-v3-2-251201');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleStart = async () => {
+    if (!title.trim() || !bg.trim()) { setError('标题和背景不能为空'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/stream-game/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: title.trim(), background: bg.trim(), genre, chapterCount, playerName: playerName.trim(), aiModel }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '创建失败');
+      navigate(`/stream-game/${data.storyId}`);
+    } catch (e: any) {
+      setError(e.message);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={() => { if (!loading) onClose(); }}
+      style={{ position: 'fixed', inset: 0, background: '#000c', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 8px' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ background: '#0f172a', borderRadius: 20, border: '1px solid #334155', width: '100%', maxWidth: 520, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ color: '#e2e8f0', fontWeight: 800, fontSize: 16 }}>
+              {lang === 'zh' ? '⚡ 边看边生成' : '⚡ Play While Generating'}
+            </div>
+            <div style={{ color: '#475569', fontSize: 12, marginTop: 4 }}>
+              {lang === 'zh' ? '生成大纲后立即可以开始游玩，无需等待' : 'Start playing right after outline generation'}
+            </div>
+          </div>
+          <button onClick={onClose} disabled={loading} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>×</button>
+        </div>
+
+        {error && <div style={{ color: '#ef4444', fontSize: 12 }}>{error}</div>}
+
+        <input
+          placeholder={lang === 'zh' ? '故事标题（必填）' : 'Story title (required)'}
+          value={title} onChange={e => setTitle(e.target.value)}
+          disabled={loading} style={qiStyle}
+        />
+        <textarea
+          placeholder={lang === 'zh' ? '故事背景简介（必填）' : 'Background summary (required)'}
+          value={bg} onChange={e => setBg(e.target.value)}
+          disabled={loading} rows={3}
+          style={{ ...qiStyle, resize: 'vertical', minHeight: 72 }}
+        />
+        <input
+          placeholder={lang === 'zh' ? '玩家角色名字（选填）' : 'Player character name (optional)'}
+          value={playerName} onChange={e => setPlayerName(e.target.value)}
+          disabled={loading} style={qiStyle}
+        />
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            value={genre} onChange={e => setGenre(e.target.value as any)}
+            disabled={loading}
+            style={{ ...qiStyle, width: 'auto', padding: '7px 10px', cursor: 'pointer' }}
+          >
+            <option value="mystery">{lang === 'zh' ? '推理解谜' : 'Mystery'}</option>
+            <option value="numeric">{lang === 'zh' ? '数值冒险' : 'Numeric'}</option>
+          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: '#94a3b8', fontSize: 12 }}>
+              {lang === 'zh' ? `${chapterCount} 章` : `${chapterCount} ch.`}
+            </span>
+            <input
+              type="range" min={1} max={5} value={chapterCount}
+              onChange={e => setChapterCount(Number(e.target.value))}
+              disabled={loading} style={{ accentColor: '#22c55e', width: 90 }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {QUICK_MODEL_OPTIONS.map(opt => (
+            <button
+              key={opt.value} type="button"
+              onClick={() => setAiModel(opt.value)}
+              disabled={loading}
+              style={{
+                background: aiModel === opt.value ? (opt.provider === 'openrouter' ? '#7c3aed22' : '#1e293b') : 'transparent',
+                border: aiModel === opt.value ? `1px solid ${opt.provider === 'openrouter' ? '#7c3aed' : '#6366f1'}` : '1px solid #334155',
+                color: aiModel === opt.value ? (opt.provider === 'openrouter' ? '#a78bfa' : '#818cf8') : '#475569',
+                borderRadius: 8, padding: '4px 10px', fontSize: 11, cursor: 'pointer',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={handleStart}
+          disabled={loading || !title.trim() || !bg.trim()}
+          style={{
+            background: loading ? '#1e293b' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+            color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0',
+            fontSize: 15, fontWeight: 700, cursor: loading ? 'default' : 'pointer',
+            opacity: (!title.trim() || !bg.trim()) ? 0.4 : 1,
+            transition: 'all .2s',
+          }}
+        >
+          {loading
+            ? (lang === 'zh' ? '⏳ 生成大纲中，完成后自动跳转…' : '⏳ Generating outline…')
+            : (lang === 'zh' ? '⚡ 立即开始玩' : '⚡ Start Playing Now')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const qiStyle: CSSProperties = {
+  background: '#1e293b', border: '1px solid #334155', borderRadius: 10,
+  color: '#e2e8f0', padding: '10px 12px', fontSize: 13, outline: 'none', width: '100%',
+  boxSizing: 'border-box',
+};
+
 // ─── Batch Create Modal ────────────────────────────────────────────────────
 interface BatchStorySlot {
   id: number;
@@ -293,6 +437,7 @@ export function MyStories() {
   const [stories, setStories] = useState<Story[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showBatch, setShowBatch] = useState(false);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [title, setTitle] = useState('');
   const [bg, setBg] = useState('');
   const [genre, setGenre] = useState<'mystery' | 'numeric'>('mystery');
@@ -364,18 +509,28 @@ export function MyStories() {
     <Layout>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
         <h2 style={{ color: '#e2e8f0', margin: 0, fontSize: 24, fontWeight: 800 }}>{t('story_center')}</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <button
-            onClick={() => { setShowBatch(true); setShowForm(false); }}
+            onClick={() => { setShowBatch(true); setShowForm(false); setShowQuickCreate(false); }}
             style={{ ...btnStyle, background: '#0f172a', border: '1px solid #6366f155', color: '#a5b4fc', fontSize: 12 }}
           >
             {lang === 'zh' ? '批量生成' : 'Batch Create'}
+          </button>
+          <button
+            onClick={() => { setShowQuickCreate(true); setShowForm(false); setShowBatch(false); }}
+            style={{ ...btnStyle, background: '#052e16', border: '1px solid #22c55e55', color: '#4ade80', fontSize: 12 }}
+          >
+            {lang === 'zh' ? '⚡ 边看边生成' : '⚡ Play While Gen'}
           </button>
           <button onClick={() => setShowForm(!showForm)} style={btnStyle}>
             {showForm ? '×' : `+ ${t('story_create')}`}
           </button>
         </div>
       </div>
+
+      {showQuickCreate && (
+        <QuickCreateModal lang={lang} token={token} onClose={() => setShowQuickCreate(false)} />
+      )}
 
       {showForm && (
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, marginBottom: 28, border: '1px solid #334155' }}>
