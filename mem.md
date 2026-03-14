@@ -94,6 +94,18 @@
 - StoryModel 新增 `unpublishAllChapters` / `deleteAllChapters` / `deleteStory`
 - StoryService.deleteStory 返回 `{ publishedCount }`，Controller 透传给前端
 
+## 边看边生成（stream-game，2026-03-15）
+- 入口：MyStories 页面"⚡边看边生成"绿色按钮 → QuickCreateModal → `/stream-game/:storyId`
+- 后端路由 `/api/stream-game/`: `POST /start`（创建故事+生成outlines）, `GET /:id/events`（SSE流）, `POST /:id/retry/:chap`（重试）
+- SSE 认证：EventSource 不支持 header，通过 `?token=` query param（`requireAuthOrQuery` 中间件）
+- 解析格式：`<node>{JSON}</node>` XML包裹 JSON，`<meta>{JSON}</meta>` 用于 numeric 元数据
+- `XmlStreamParser.ts`: buffer+边界检测，parseJson含fixJson回退，retry逻辑处理假边界
+- `StreamGameService.ts`: sessions Map，25秒heartbeat，eventLog replay断线重连，2小时TTL
+- 流式引擎: `StreamMysteryEngine.tsx`（isWaiting → tapHint变脉冲"正在生成下一幕"），`StreamNumericEngine.tsx`（isWaiting+waiting state，useEffect监听data.length自动resume）
+- AIService.callAI 新增可选第6个参数 `onChunk?: (delta: string) => void`（向后兼容）
+- 生成流程：先同步生成outlines → 顺序生成各章 XML → 每个</node>到来即广播SSE node事件 → 章节完成存DB(转JSON)
+- 章节失败：broadcast chapter_error，前端显示重试按钮（不影响其他章节）
+
 ## 批量生成故事（纯前端）
 - 标题栏"批量生成"按钮 → 打开 `BatchCreateModal`（独立于现有创建逻辑）
 - 最多 5 个故事 slot，每个填：标题/背景/玩家名/类型/AI模型/章节数
