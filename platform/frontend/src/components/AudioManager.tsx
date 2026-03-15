@@ -12,7 +12,7 @@ interface AudioContextType {
 const AudioContext = createContext<AudioContextType>({
   playClick: () => {},
   toggleBgm: () => {},
-  bgmEnabled: true,
+  bgmEnabled: false,
   bgmVolume: 0.3,
   setBgmVolume: () => {},
   setBgmActive: () => {},
@@ -21,7 +21,7 @@ const AudioContext = createContext<AudioContextType>({
 export const useAudio = () => useContext(AudioContext);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const [bgmEnabled, setBgmEnabled] = useState(true);
+  const [bgmEnabled, setBgmEnabled] = useState(false);
   const [bgmActive, setBgmActive] = useState(false);
   const [bgmVolume, setBgmVolumeState] = useState(() => {
     const saved = localStorage.getItem('bgm_volume');
