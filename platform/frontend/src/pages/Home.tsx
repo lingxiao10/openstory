@@ -6,6 +6,7 @@ import { GameIndex, PublicStory } from '../types';
 import { queryWork } from '../api/queryWork';
 import { useI18n } from '../i18n';
 import { TranslationKey } from '../i18n/translations';
+import { useAudio } from '../components/AudioManager';
 
 export function Home() {
   const [games, setGames] = useState<GameIndex[]>([]);
@@ -14,6 +15,7 @@ export function Home() {
   const [filter, setFilter] = useState<'all' | 'mystery' | 'numeric'>('all');
   const { t, lang } = useI18n();
   const navigate = useNavigate();
+  const { playClick } = useAudio();
 
   useEffect(() => {
     Promise.all([
@@ -78,7 +80,7 @@ export function Home() {
 
         <button
           className="play-generate-btn"
-          onClick={() => navigate('/my-stories?quick=1')}
+          onClick={() => { playClick(); navigate('/my-stories?quick=1'); }}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 10,
             padding: '14px 36px', borderRadius: 14,
@@ -125,6 +127,7 @@ const typeIcons: Record<string, string> = { mystery: '🔍', numeric: '⚡' };
 
 function StoryCard({ story }: { story: PublicStory }) {
   const { t, lang } = useI18n();
+  const { playClick } = useAudio();
   const title = lang === 'en' && story.title_en ? story.title_en : story.title_zh;
   const bg = lang === 'en' && story.background_en ? story.background_en : story.background_zh;
   const color = typeColors[story.genre] || '#6366f1';
@@ -157,6 +160,7 @@ function StoryCard({ story }: { story: PublicStory }) {
         } as React.CSSProperties}>{bg}</p>
         <Link
           to={`/stream-game/${story.id}`}
+          onClick={playClick}
           style={{ display: 'block', textAlign: 'center', background: color, color: '#fff', textDecoration: 'none', padding: '10px', borderRadius: 10, fontWeight: 700, fontSize: 14, marginTop: 'auto' }}
         >
           {t('home_play')} →
