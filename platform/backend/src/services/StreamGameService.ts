@@ -331,9 +331,12 @@ ${playerPrompt}
     await StoryModel.updateChapter(chapter.id, { generating_at: new Date() });
 
     // 前章文本摘要（保证连贯性）
+    // DEBUG: 记录 allChapters 状态，排查前情提要是否正确传入
+    logger.info(`[StreamGame] ch${chapterNum} allChapters snapshot: ${JSON.stringify(allChapters.map(c => ({ num: c.chapter_num, is_generated: c.is_generated, has_json: !!c.content_json })))}`);
     const prevChapters = allChapters
       .filter(c => c.chapter_num < chapterNum && c.is_generated && c.content_json)
       .slice(-10);
+    logger.info(`[StreamGame] ch${chapterNum} prevChapters count=${prevChapters.length} (from ${allChapters.filter(c=>c.chapter_num < chapterNum).length} candidates)`);
 
     const prompt = genre === 'numeric'
       ? StreamGameService.buildNumericPrompt(session.spine, story, prevChapters, chapterNum, totalChapters)
@@ -342,6 +345,29 @@ ${playerPrompt}
 
     const logFile = promptLogger.write(genre, chapterNum, prompt);
     if (logFile) logger.info(`[StreamGame] prompt logged to ${logFile}`);
+
+    // 强制写入详细调试日志（无论 promptLogEnabled 是否开启）
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const debugDir = path.join(__dirname, '../../../logs');
+      fs.mkdirSync(debugDir, { recursive: true });
+      const debugFile = path.join(debugDir, `debug_ai_messages_ch${chapterNum}_${Date.now()}.txt`);
+      const debugContent = [
+        `=== Chapter ${chapterNum}/${totalChapters} AI Messages Debug ===`,
+        `Time: ${new Date().toISOString()}`,
+        `Genre: ${genre}`,
+        `prevChapters count: ${prevChapters.length}`,
+        `prevChapters nums: [${prevChapters.map(c => c.chapter_num).join(', ')}]`,
+        ``,
+        `=== FULL PROMPT (sent as user message) ===`,
+        prompt,
+      ].join('\n');
+      fs.writeFileSync(debugFile, debugContent, 'utf-8');
+      logger.info(`[StreamGame] debug messages logged to ${debugFile}`);
+    } catch (e: any) {
+      logger.error(`[StreamGame] debug log write failed: ${e.message}`);
+    }
 
     const aiModel = story.ai_model || 'deepseek-v3-2-251201';
     const maxTokens = genre === 'numeric' ? 18000 : 7000;
@@ -398,6 +424,10 @@ ${playerPrompt}
       is_generated: true,
       generating_at: null,
     });
+
+    // 更新内存中的 chapter 对象，确保下一章能正确读取前情提要
+    chapter.content_json = contentJson;
+    chapter.is_generated = true;
 
     StreamGameService.broadcast(session, 'chapter_done', { chapter: chapterNum });
     logger.info(`[StreamGame] chapter ${chapterNum} done, nodes=${collectedNodes.length}`);
