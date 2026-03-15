@@ -115,10 +115,7 @@ export function StoryReader() {
                       </div>
                     );
                   })()}
-                  {ch.content_json && (
-                    <div style={{ color: '#6366f1', fontSize: 11, marginTop: 4 }}>{t('reader_interactive')}</div>
-                  )}
-                  {isOwner && !ch.published && (
+                  {!ch.published && (
                     <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>{t('reader_unpublished')}</div>
                   )}
                 </div>
