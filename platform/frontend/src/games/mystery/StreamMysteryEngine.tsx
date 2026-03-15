@@ -341,7 +341,7 @@ const S: Record<string, React.CSSProperties> = {
   choiceIcon: { fontSize: '1.8rem', marginBottom: 12, opacity: 0.6 },
   choiceQuestion: { fontSize: '0.95rem', lineHeight: 1.8, textAlign: 'center', marginBottom: 20, letterSpacing: '0.05em' },
   choiceRow: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%' },
-  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', fontFamily: 'inherit', width: '100%', outline: 'none' },
+  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', width: '100%', outline: 'none' },
   choiceLetter: { fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: '1rem', minWidth: 18, marginTop: 1 },
   choiceText: { fontSize: '0.88rem', lineHeight: 1.6, letterSpacing: '0.04em' },
   startBtn: { padding: '10px 24px', background: 'transparent', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 2, transition: 'all .2s' },
