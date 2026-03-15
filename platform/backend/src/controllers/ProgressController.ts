@@ -5,7 +5,8 @@ export class ProgressController {
   static async complete(req: Request, res: Response) {
     try {
       const { chapterId } = req.params;
-      await ProgressModel.complete(req.user!.userId, chapterId);
+      const userId = (req as any).userId;
+      await ProgressModel.complete(userId, chapterId);
       res.json({ ok: true });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -14,7 +15,8 @@ export class ProgressController {
 
   static async getMyProgress(req: Request, res: Response) {
     try {
-      const ids = await ProgressModel.getCompletedChapterIds(req.user!.userId);
+      const userId = (req as any).userId;
+      const ids = await ProgressModel.getCompletedChapterIds(userId);
       res.json(ids);
     } catch (err: any) {
       res.status(500).json({ error: err.message });

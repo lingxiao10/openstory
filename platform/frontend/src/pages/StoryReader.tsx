@@ -7,8 +7,6 @@ import { MysteryEngine } from '../games/mystery/MysteryEngine';
 import { MysteryCardEngine } from '../games/mystery/MysteryCardEngine';
 import { NumericEngine } from '../games/numeric/NumericEngine';
 
-type Theme = 'classic' | 'card';
-
 interface Chapter {
   id: string;
   chapter_num: number;
@@ -43,15 +41,6 @@ export function StoryReader() {
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem('story_theme') as Theme) || 'card'
-  );
-
-  const toggleTheme = () => {
-    const next: Theme = theme === 'classic' ? 'card' : 'classic';
-    setTheme(next);
-    localStorage.setItem('story_theme', next);
-  };
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +72,15 @@ export function StoryReader() {
       setCompleted(prev => [...prev, ch.id]);
       setActiveChapter(null);
     } catch (e: any) { console.error(e); }
+  };
+
+  const startReading = async (ch: Chapter) => {
+    setActiveChapter(ch);
+    if (isLoggedIn && token) {
+      try {
+        await queryWork('/api/reads/record', { method: 'POST', token, body: { chapterId: ch.id } });
+      } catch (e: any) { console.error('[recordRead]', e); }
+    }
   };
 
   if (loading) return (
@@ -118,7 +116,7 @@ export function StoryReader() {
 
       if (gameData) {
         // Card theme: MysteryCardEngine is fully self-contained with back button
-        if (story.genre === 'mystery' && theme === 'card') {
+        if (story.genre === 'mystery') {
           return (
             <MysteryCardEngine
               gameData={gameData}
@@ -180,14 +178,7 @@ export function StoryReader() {
   return (
     <div style={rootStyle}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 20px 80px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <button onClick={() => navigate(-1)} style={backBtnStyle}>← {t('game_back')}</button>
-          {story.genre === 'mystery' && (
-            <button onClick={toggleTheme} style={themeBtnStyle} title="切换展示风格">
-              {theme === 'classic' ? '🃏 卡片风格' : '📖 经典风格'}
-            </button>
-          )}
-        </div>
+        <button onClick={() => navigate(-1)} style={backBtnStyle}>← {t('game_back')}</button>
 
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <h1 style={{ color: '#e2e8f0', fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>{title}</h1>
@@ -208,7 +199,7 @@ export function StoryReader() {
               <button
                 key={ch.id}
                 disabled={locked}
-                onClick={() => !locked && setActiveChapter(ch)}
+                onClick={() => !locked && startReading(ch)}
                 style={{
                   background: locked ? '#0f172a' : isDone ? '#16a34a11' : '#1e293b',
                   border: `1px solid ${locked ? '#1e293b' : isDone ? '#22c55e44' : '#334155'}`,
@@ -259,9 +250,4 @@ const backBtnStyle: React.CSSProperties = {
 const completeBtnStyle: React.CSSProperties = {
   background: '#6366f1', color: '#fff', border: 'none', borderRadius: 12,
   padding: '14px 40px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-};
-const themeBtnStyle: React.CSSProperties = {
-  background: 'none', border: '1px solid #334155', color: '#94a3b8',
-  cursor: 'pointer', fontSize: 12, padding: '6px 12px',
-  borderRadius: 8, transition: 'all 0.2s',
 };

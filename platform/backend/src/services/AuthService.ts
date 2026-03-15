@@ -62,6 +62,12 @@ export class AuthService {
     };
   }
 
+  static async getUserById(userId: string) {
+    const user = await UserModel.findById(userId);
+    if (!user) return null;
+    return { id: user.id, username: user.username, email: user.email, lang: user.lang };
+  }
+
   static generateToken(payload: AuthPayload): string {
     return jwt.sign(payload, config.jwtSecret, { expiresIn: config.jwtExpiresIn } as any);
   }

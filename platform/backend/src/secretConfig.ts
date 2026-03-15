@@ -11,6 +11,8 @@ interface SecretJson {
   daily_gen_limit_enabled?: boolean;
   daily_gen_limit?: number;
   admin_email?: string;
+  admin_emails?: string[];
+  admin_usernames?: string[];
 }
 
 function loadSecret(): SecretJson {

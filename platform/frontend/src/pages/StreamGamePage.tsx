@@ -60,6 +60,39 @@ export function StreamGamePage() {
   // Keep ref in sync with state
   useEffect(() => { chaptersRef.current = chapters; }, [chapters]);
 
+  // ── Initialize session ──────────────────────────────────────────────────────
+
+  const initializeSession = useCallback(async () => {
+    if (!storyId || !token) return false;
+
+    try {
+      // Check if session exists
+      const statusRes = await fetch(`/api/stream-game/${storyId}/status?token=${encodeURIComponent(token)}`);
+      const statusData = await statusRes.json();
+
+      if (statusData.found) {
+        return true; // Session exists
+      }
+
+      // Session doesn't exist, create it
+      const resumeRes = await fetch(`/api/stream-game/${storyId}/resume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+
+      if (!resumeRes.ok) {
+        const err = await resumeRes.json();
+        throw new Error(err.error || '创建会话失败');
+      }
+
+      return true;
+    } catch (err: any) {
+      setFatalError(err.message || '初始化失败');
+      setPhase('fatal_error');
+      return false;
+    }
+  }, [storyId, token]);
+
   // ── SSE connection ───────────────────────────────────────────────────────────
 
   const connectSse = useCallback(() => {
@@ -141,9 +174,15 @@ export function StreamGamePage() {
   }, [storyId, token]);
 
   useEffect(() => {
-    connectSse();
+    const init = async () => {
+      const success = await initializeSession();
+      if (success) {
+        connectSse();
+      }
+    };
+    init();
     return () => { sseRef.current?.close(); };
-  }, [connectSse]);
+  }, [initializeSession, connectSse]);
 
   // ── Chapter navigation ───────────────────────────────────────────────────────
 

@@ -255,6 +255,7 @@ ${prevContext}
   方案A（探险/生存）：life生命、stamina体力、mood心情、supplies物资
   方案B（冒险/商旅）：life生命、stamina体力、mood心情、gold金币
   自定义举例：如武侠故事可用 life生命/inner内力/honor声望/bond缘分；空间故事可用 life生命/oxygen氧气/power电力/morale士气
+- 数值范围：所有属性初始值为7，最大值为14，最小值为0（归零=死亡）
 - 每个 choice 节点的 effects 中，非零值最多3个（通常2-3个），不要4个全改
 - 数值变化必须有增有减（即"数值交换"），例如体力-2同时心情+1，而非全部减少或全部增加
 - 8-10个 choice 节点要均匀覆盖4种属性，不能总是只围绕某几个属性；每种属性至少被2个不同choice节点涉及

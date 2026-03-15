@@ -33,5 +33,6 @@ export const config = {
   needCheckEmail: secret.need_check_email ?? false,
   dailyGenLimitEnabled: secret.daily_gen_limit_enabled ?? false,
   dailyGenLimit: secret.daily_gen_limit ?? 10,
-  adminEmail: secret.admin_email || '',
+  adminEmails: secret.admin_emails || [],
+  adminUsernames: secret.admin_usernames || [],
 };

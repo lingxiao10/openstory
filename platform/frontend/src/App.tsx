@@ -6,9 +6,9 @@ import { GamePlayer } from './pages/GamePlayer';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { MyStories } from './pages/MyStories';
-import { StoryReader } from './pages/StoryReader';
 import { Admin } from './pages/Admin';
 import { StreamGamePage } from './pages/StreamGamePage';
+import { Stats } from './pages/Stats';
 
 export default function App() {
   return (
@@ -18,12 +18,13 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/game/:id" element={<GamePlayer />} />
-            <Route path="/story/:id" element={<StoryReader />} />
+            <Route path="/story/:id" element={<StreamGamePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/my-stories" element={<MyStories />} />
             <Route path="/create" element={<Navigate to="/my-stories" replace />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/stream-game/:storyId" element={<StreamGamePage />} />
           </Routes>
         </BrowserRouter>

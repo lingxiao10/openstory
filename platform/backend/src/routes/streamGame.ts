@@ -26,6 +26,7 @@ function requireAuthOrQuery(req: Request, res: Response, next: NextFunction) {
 }
 
 router.post('/start', requireAuth, StreamGameController.start);
+router.post('/:storyId/resume', requireAuth, StreamGameController.resume);
 router.get('/:storyId/events', requireAuthOrQuery, StreamGameController.events);
 router.post('/:storyId/retry/:chapterNum', requireAuth, StreamGameController.retry);
 router.get('/:storyId/status', requireAuthOrQuery, StreamGameController.status);

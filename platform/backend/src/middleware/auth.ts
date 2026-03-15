@@ -9,7 +9,8 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const token = authHeader.slice(7);
     const payload = AuthService.verifyToken(token);
-    req.user = payload;
+    (req as any).userId = payload.userId;
+    (req as any).username = payload.username;
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid token' });

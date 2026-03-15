@@ -7,6 +7,8 @@ import generateRoutes from './routes/generate';
 import progressRoutes from './routes/progress';
 import adminRoutes from './routes/admin';
 import streamGameRoutes from './routes/streamGame';
+import statsRoutes from './routes/stats';
+import readsRoutes from './routes/reads';
 import { errorHandler } from './middleware/error';
 
 const app = express();
@@ -21,6 +23,8 @@ app.use('/api/generate', generateRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/stream-game', streamGameRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/reads', readsRoutes);
 
 app.use(errorHandler);
 

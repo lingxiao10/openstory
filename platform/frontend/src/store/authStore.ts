@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode, createElement } from 'react';
+import { createContext, useState, useEffect, ReactNode, createElement } from 'react';
 
 interface AuthUser {
   id: string;
@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (user: AuthUser, token: string) => void;
   logout: () => void;
   isLoggedIn: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   isLoggedIn: false,
+  refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -34,6 +36,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('auth_token'));
+
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+      }
+    } catch (err) {
+      console.error('[refreshUser]', err);
+    }
+  };
+
+  useEffect(() => {
+    refreshUser();
+  }, [token]);
 
   const login = (u: AuthUser, t: string) => {
     setUser(u);
@@ -49,5 +71,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_token');
   };
 
-  return createElement(AuthContext.Provider, { value: { user, token, login, logout, isLoggedIn: !!user } }, children);
+  return createElement(AuthContext.Provider, { value: { user, token, login, logout, isLoggedIn: !!user, refreshUser } }, children);
 }

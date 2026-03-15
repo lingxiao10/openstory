@@ -95,7 +95,7 @@
 - StoryService.deleteStory 返回 `{ publishedCount }`，Controller 透传给前端
 
 ## 边看边生成（stream-game，2026-03-15）
-- 入口：MyStories 页面"⚡边看边生成"绿色按钮 → QuickCreateModal → `/stream-game/:storyId`
+- 入口：首页"⚡边玩边生成"绿色光泽按钮 → QuickCreateModal → `/stream-game/:storyId`
 - 后端路由 `/api/stream-game/`: `POST /start`（创建故事+生成outlines）, `GET /:id/events`（SSE流）, `POST /:id/retry/:chap`（重试）
 - SSE 认证：EventSource 不支持 header，通过 `?token=` query param（`requireAuthOrQuery` 中间件）
 - 解析格式：`<node>{JSON}</node>` XML包裹 JSON，`<meta>{JSON}</meta>` 用于 numeric 元数据
@@ -105,6 +105,7 @@
 - AIService.callAI 新增可选第6个参数 `onChunk?: (delta: string) => void`（向后兼容）
 - 生成流程：先同步生成outlines → 顺序生成各章 XML → 每个</node>到来即广播SSE node事件 → 章节完成存DB(转JSON)
 - 章节失败：broadcast chapter_error，前端显示重试按钮（不影响其他章节）
+- 弹窗交互：所有 Modal 禁用点击背景关闭，必须点 × 按钮（避免误操作）
 
 ## 批量生成故事（纯前端）
 - 标题栏"批量生成"按钮 → 打开 `BatchCreateModal`（独立于现有创建逻辑）
@@ -113,17 +114,20 @@
 - 每个 slot 独立显示状态（idle/creating/done/error）
 - 全部完成后调 `load()` 刷新列表，点"完成关闭"关弹窗
 
-## 展示模板切换
-- 前端 `StoryReader.tsx` 支持多种展示风格，localStorage key `story_theme`（`classic` | `card`），**默认 `card`**
-- 章节列表页右上角"🃏 卡片风格 / 📖 经典风格"按钮（仅 mystery 类型故事显示）
+## 卡片模式（唯一展示风格）
 - 卡片风格：`MysteryCardEngine.tsx`（`games/mystery/`），随机旋转 + 3条命，自带返回/胜利界面
 - `MysteryCardEngine` 内置色调切换：localStorage key `card_tone`（`dark` | `light`），**默认 `dark`**
   - 暗色调（dark）：深棕黑底 `#1C1510`，暖金字 `#C9A84C`，暗色背景
   - 白色调（light）：羊皮纸底 `#F4EAD5`，深棕字 `#2C1810`，米白背景
-  - 切换按钮位于右上角（lives旁）：`☀ 白色调` / `☾ 暗色调`
-- 接口与 `MysteryEngine` 相同：`{ gameData, onVictory?, onBack? }`
-- numeric 类型已支持卡片风格：深蓝底 `#0f172a`，靛紫边框 `#6366f1`，corner装饰，淡入动画
-  - 移动端微旋转（max ±0.8°，ROTS数组），PC/Mac（`pointer:fine`）不旋转
+  - 切换按钮位于右上角，lives 位于右下角：`☀ 白色调` / `☾ 暗色调`
+- 接口：`{ gameData, onVictory?, onBack? }`
+- numeric 类型卡片风格：视觉完全照搬 MysteryCardEngine（暗色/白色调切换、纸质卡片、角装饰、渐晕背景）
+  - stats 4项固定页面底部，竖向进度条（52×70px，颜色高度代表数值百分比）；items 显示在 stats 上方
+  - 选择后显示 narrative 卡片（含属性变化徽章+获得物品），轻触继续
+  - 移动端微旋转（max ±0.8°），PC/Mac（UA检测 `navigator.userAgent`）不旋转
+  - 卡片切换动画：`cardIn .3s ease`（透明度渐变）
+  - `NumericEngine.tsx` 和 `StreamNumericEngine.tsx` 均已实现
+- **无进度条**：底部进度条已移除，不再显示章节进度
 
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`

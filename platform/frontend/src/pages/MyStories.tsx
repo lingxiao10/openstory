@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 const QUICK_MODEL_OPTIONS = [
   { value: 'deepseek-v3-2-251201', label: 'DeepSeek V3', provider: 'ark' },
   { value: 'doubao-seed-1-8-251228', label: 'Doubao 1.8', provider: 'ark' },
-  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'openrouter' },
-  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'openrouter' },
+  { value: 'google/gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro', provider: 'openrouter' },
+  { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'openrouter' },
 ] as const;
 
 function QuickCreateModal({ lang, token, onClose }: {
@@ -23,7 +23,7 @@ function QuickCreateModal({ lang, token, onClose }: {
   const [error, setError] = useState('');
 
   const handleStart = async () => {
-    if (!title.trim() || !bg.trim()) { setError('标题和背景不能为空'); return; }
+    if (!title.trim() || !bg.trim() || !playerName.trim()) { setError('标题、背景和玩家角色名不能为空'); return; }
     setLoading(true); setError('');
     try {
       const res = await fetch('/api/stream-game/start', {
@@ -42,7 +42,6 @@ function QuickCreateModal({ lang, token, onClose }: {
 
   return (
     <div
-      onClick={() => { if (!loading) onClose(); }}
       style={{ position: 'fixed', inset: 0, background: '#000c', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 8px' }}
     >
       <div
@@ -75,9 +74,9 @@ function QuickCreateModal({ lang, token, onClose }: {
           style={{ ...qiStyle, resize: 'vertical', minHeight: 72 }}
         />
         <input
-          placeholder={lang === 'zh' ? '玩家角色名字（选填）' : 'Player character name (optional)'}
+          placeholder={lang === 'zh' ? '玩家角色名字（必填）' : 'Player character name (required)'}
           value={playerName} onChange={e => setPlayerName(e.target.value)}
-          disabled={loading} style={qiStyle}
+          disabled={loading} required style={qiStyle}
         />
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -121,7 +120,7 @@ function QuickCreateModal({ lang, token, onClose }: {
 
         <button
           onClick={handleStart}
-          disabled={loading || !title.trim() || !bg.trim()}
+          disabled={loading || !title.trim() || !bg.trim() || !playerName.trim()}
           style={{
             background: loading ? '#1e293b' : 'linear-gradient(135deg, #22c55e, #16a34a)',
             color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0',
@@ -131,7 +130,7 @@ function QuickCreateModal({ lang, token, onClose }: {
           }}
         >
           {loading
-            ? (lang === 'zh' ? '⏳ 生成大纲中，完成后自动跳转…' : '⏳ Generating outline…')
+            ? (lang === 'zh' ? '⏳ 即将进入游戏，预计需要3-5秒…' : '⏳ Entering game, please wait…')
             : (lang === 'zh' ? '⚡ 立即开始玩' : '⚡ Start Playing Now')}
         </button>
       </div>
@@ -205,7 +204,6 @@ function BatchCreateModal({ lang, token, onClose, onDone }: {
 
   return (
     <div
-      onClick={() => { if (!submitting) onClose(); }}
       style={{ position: 'fixed', inset: 0, background: '#000c', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 8px', overflowY: 'auto' }}
     >
       <div
@@ -341,7 +339,6 @@ function GenModal({ lang, onOne, onAll, showAll, onClose }: {
 }) {
   return (
     <div
-      onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: '#000a', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
     >
       <div
@@ -425,8 +422,8 @@ const CHAPTER_COUNT_MAX = 5;
 const MODEL_OPTIONS = [
   { value: 'deepseek-v3-2-251201', label: 'DeepSeek V3', provider: 'ark' },
   { value: 'doubao-seed-1-8-251228', label: 'Doubao Seed 1.8', provider: 'ark' },
-  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'openrouter' },
-  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'openrouter' },
+  { value: 'google/gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro', provider: 'openrouter' },
+  { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'openrouter' },
 ] as const;
 
 export function MyStories() {
@@ -1095,7 +1092,7 @@ function ChapterRow({ ch, lang, storyId, token, generating, inQueue, anyBusy, pr
           )}
           {!!ch.is_generated && (
             <button
-              onClick={() => navigate(`/story/${storyId}?ch=${ch.id}`)}
+              onClick={() => navigate(`/stream-game/${storyId}`)}
               style={{ background: 'none', border: '1px solid #6366f144', borderRadius: 6, color: '#a5b4fc', fontSize: 12, padding: '3px 10px', marginTop: 6, cursor: 'pointer' }}
             >
               ▶ {lang === 'zh' ? '试玩' : 'Play'}

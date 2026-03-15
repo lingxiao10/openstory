@@ -1,7 +1,7 @@
 export const translations = {
   // nav
   nav_home:     { zh: '游戏库',     en: 'Library' },
-  nav_create:   { zh: 'AI生成故事', en: 'AI Story' },
+  nav_create:   { zh: '我的小说', en: 'My Stories' },
   nav_login:    { zh: '登录',       en: 'Login' },
   nav_register: { zh: '注册',       en: 'Register' },
   nav_logout:   { zh: '退出',       en: 'Logout' },

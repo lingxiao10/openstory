@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { StreamGameService, StreamCreateOptions } from '../services/StreamGameService';
+import { StoryModel } from '../models/StoryModel';
 import { logger } from '../logger';
 
 const activeStarts = new Set<string>(); // userId deduplicate
@@ -8,7 +9,7 @@ export class StreamGameController {
 
   /** POST /api/stream-game/start — create story + outlines, return storyId */
   static async start(req: Request, res: Response) {
-    const userId = req.user!.userId;
+    const userId = (req as any).userId;
 
     if (activeStarts.has(userId)) {
       return res.status(409).json({ error: '您已有一个故事正在初始化，请稍候' });
@@ -46,17 +47,60 @@ export class StreamGameController {
     }
   }
 
+  /** POST /api/stream-game/:storyId/resume — resume existing story */
+  static async resume(req: Request, res: Response) {
+    const { storyId } = req.params;
+    const userId = (req as any).userId;
+
+    logger.info(`[StreamGame] resume request: storyId=${storyId}, userId=${userId}`);
+
+    try {
+      // Check if session already exists
+      const existing = StreamGameService.getSessionInfo(storyId);
+      if (existing.found) {
+        logger.info(`[StreamGame] session already exists: storyId=${storyId}`);
+        return res.json({ storyId, resumed: true });
+      }
+
+      // Load story from DB
+      const story = await StoryModel.findById(storyId);
+      if (!story) {
+        logger.info(`[StreamGame] story not found: storyId=${storyId}`);
+        return res.status(404).json({ error: '故事不存在' });
+      }
+
+      // Create session for existing story
+      await StreamGameService.resumeSession(storyId, story);
+      logger.info(`[StreamGame] session resumed: storyId=${storyId}`);
+      res.json({ storyId, resumed: true });
+    } catch (err: any) {
+      logger.error(`[StreamGame] resume error: ${err.message} ${err.stack || ''}`);
+      res.status(500).json({ error: err.message });
+    }
+  }
+
   /** GET /api/stream-game/:storyId/events?token=... — SSE stream */
   static events(req: Request, res: Response) {
     const { storyId } = req.params;
+    const userId = (req as any).user?.userId;
 
-    // Disable Express default timeout for SSE connections
-    req.setTimeout(0);
-    res.setTimeout(0);
+    logger.info(`[StreamGame] events request: storyId=${storyId}, userId=${userId}`);
 
-    const found = StreamGameService.subscribeToSession(storyId, res);
-    if (!found) {
-      res.status(404).json({ error: '该流式游戏会话不存在或已过期' });
+    try {
+      // Disable Express default timeout for SSE connections
+      req.setTimeout(0);
+      res.setTimeout(0);
+
+      const found = StreamGameService.subscribeToSession(storyId, res);
+      if (!found) {
+        logger.info(`[StreamGame] session not found: storyId=${storyId}`);
+        res.status(404).json({ error: '该流式游戏会话不存在或已过期' });
+      } else {
+        logger.info(`[StreamGame] subscribed to session: storyId=${storyId}`);
+      }
+    } catch (err: any) {
+      logger.error(`[StreamGame] events error: ${err.message} ${err.stack || ''}`);
+      res.status(500).json({ error: '服务器错误' });
     }
   }
 

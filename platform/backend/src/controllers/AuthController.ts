@@ -1,8 +1,24 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/AuthService';
 import { config } from '../config';
+import { isAdmin } from '../utils/isAdmin';
 
 export class AuthController {
+  static async me(req: Request, res: Response) {
+    try {
+      const userId = (req as any).userId;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const user = await AuthService.getUserById(userId);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      const admin = isAdmin(user.email, user.username);
+      res.json({ user: { ...user, isAdmin: admin } });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
   static getConfig(_req: Request, res: Response) {
     res.json({ need_check_email: config.needCheckEmail });
   }
@@ -25,8 +41,8 @@ export class AuthController {
         return res.status(400).json({ error: 'Missing required fields' });
       }
       const result = await AuthService.register(username, email, password, lang, code);
-      const isAdmin = !!(config.adminEmail && result.user.email === config.adminEmail);
-      res.json({ token: result.token, user: { ...result.user, isAdmin } });
+      const admin = isAdmin(result.user.email, result.user.username);
+      res.json({ token: result.token, user: { ...result.user, isAdmin: admin } });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }
@@ -39,8 +55,8 @@ export class AuthController {
         return res.status(400).json({ error: 'Missing required fields' });
       }
       const result = await AuthService.login(email, password);
-      const isAdmin = !!(config.adminEmail && result.user.email === config.adminEmail);
-      res.json({ ...result, user: { ...result.user, isAdmin } });
+      const admin = isAdmin(result.user.email, result.user.username);
+      res.json({ ...result, user: { ...result.user, isAdmin: admin } });
     } catch (err: any) {
       res.status(401).json({ error: err.message });
     }

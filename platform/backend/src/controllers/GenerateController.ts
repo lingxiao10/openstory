@@ -20,7 +20,7 @@ export class GenerateController {
   static async generate(req: Request, res: Response) {
     try {
       const { storyId, chapterId } = req.params;
-      const userId = req.user!.userId;
+      const userId = (req as any).userId;
 
       if (generatingSet.has(chapterId)) {
         return res.status(409).json({ error: '该章节正在生成中，请勿重复提交 / Chapter is already being generated' });

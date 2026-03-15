@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS chapters (
   outline_en TEXT,
   content_zh TEXT,
   content_en TEXT,
-  generated BOOLEAN DEFAULT FALSE,
+  is_generated BOOLEAN DEFAULT FALSE,
   generating_at DATETIME NULL DEFAULT NULL,
   FOREIGN KEY (story_id) REFERENCES stories(id)
 );
@@ -39,3 +39,21 @@ CREATE TABLE IF NOT EXISTS chapters (
 -- ALTER TABLE chapters ADD COLUMN generating_at DATETIME NULL DEFAULT NULL;
 -- ALTER TABLE users ADD COLUMN daily_quota INT NULL DEFAULT NULL;
 -- CREATE TABLE generation_logs (id INT AUTO_INCREMENT PRIMARY KEY, user_id VARCHAR(36), chapter_id VARCHAR(36), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_user_date (user_id, created_at));
+
+CREATE TABLE IF NOT EXISTS chapter_reads (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL,
+  chapter_id VARCHAR(36) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_date (user_id, created_at),
+  INDEX idx_chapter_date (chapter_id, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS generation_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(36) NOT NULL,
+  chapter_id VARCHAR(36) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_date (user_id, created_at)
+);
+

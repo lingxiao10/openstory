@@ -31,24 +31,38 @@ interface Props {
 const ROTS = [-2.3, 1.8, -1.2, 2.7, -3.1, 0.9, 2.0, -1.7, 3.2, -0.8, 1.5, -2.5, -0.4, 2.2, -1.9, 1.1];
 const getRot = (i: number) => ROTS[((i % ROTS.length) + ROTS.length) % ROTS.length];
 
+const shuffleOptions = (card: Card, seed: number) => {
+  if (card.type !== 'choice' || !card.optA) return null;
+  const swap = seed % 2 === 0;
+  if (!swap) return { optA: card.optA, optB: card.optB, correct: card.correct };
+  return { optA: card.optB, optB: card.optA, correct: card.correct === 'A' ? ('B' as const) : ('A' as const) };
+};
+
+const _isDesktopCard = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+console.log('[MysteryCardEngine] ✅ loaded | isDesktop:', _isDesktopCard);
+
 const FONT_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-  @keyframes cardIn {
+  @keyframes mysteryCard_cardIn {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-  @keyframes cardShake {
+  @keyframes mysteryCard_cardOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+  @keyframes mysteryCard_cardShake {
     0%,100% { transform: translateX(0) rotate(var(--card-r, 0deg)); }
     18%  { transform: translateX(-10px) rotate(var(--card-r, 0deg)); }
     36%  { transform: translateX(10px)  rotate(var(--card-r, 0deg)); }
     54%  { transform: translateX(-6px)  rotate(var(--card-r, 0deg)); }
     72%  { transform: translateX(6px)   rotate(var(--card-r, 0deg)); }
   }
-  @keyframes cardGlow {
+  @keyframes mysteryCard_cardGlow {
     0%,100% { text-shadow: 0 0 8px #C9A84C66; }
     50%     { text-shadow: 0 0 22px #C9A84CAA, 0 0 4px #fff3; }
   }
-  @keyframes cardFadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes mysteryCard_cardFadeIn { from { opacity: 0 } to { opacity: 1 } }
 `;
 
 type CardTone = 'dark' | 'light';
@@ -61,7 +75,9 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
   const [lives, setLives] = useState(3);
   const [phase, setPhase] = useState<'playing' | 'wrong' | 'gameover' | 'victory'>('playing');
   const [penalty, setPenalty] = useState({ msg: '', hint: '' });
-  const [cardKey, setCardKey] = useState(0);
+  const [removedCards, setRemovedCards] = useState<Set<number>>(new Set());
+  const [exitingCardIndex, setExitingCardIndex] = useState<number | null>(null);
+  const [answeredCards, setAnsweredCards] = useState<Map<number, { correct: boolean; selectedOpt: 'A' | 'B' }>>(new Map());
   const [cardTone, setCardTone] = useState<CardTone>(
     () => (localStorage.getItem('card_tone') as CardTone) || 'dark'
   );
@@ -74,55 +90,76 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
 
   const T = cardTone === 'dark' ? darkTone : lightTone;
 
-  const card = data[index] as Card | undefined;
-  const rot = getRot(index);
+  const visibleCards = data.filter((_, i) => !removedCards.has(i));
+  const firstVisibleIndex = visibleCards.length > 0 ? data.indexOf(visibleCards[0]) : -1;
+  const card = data[firstVisibleIndex] as Card | undefined;
 
   useEffect(() => {
-    if (card?.type === 'victory' || card?.type === 'verdict') {
-      if (index >= data.length - 1) {
-        const t = setTimeout(() => setPhase('victory'), 900);
-        return () => clearTimeout(t);
-      }
+    // 当所有卡片都被移除后，显示胜利界面
+    if (visibleCards.length === 0 && data.length > 0 && phase === 'playing') {
+      const t = setTimeout(() => setPhase('victory'), 300);
+      return () => clearTimeout(t);
     }
-  }, [index, card, data.length]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const shuffledAB = useMemo(() => {
-    if (!card || card.type !== 'choice' || !card.optA) return null;
-    const swap = Math.random() < 0.5;
-    if (!swap) return { optA: card.optA, optB: card.optB, correct: card.correct };
-    return { optA: card.optB, optB: card.optA, correct: card.correct === 'A' ? ('B' as const) : ('A' as const) };
-  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visibleCards.length, data.length, phase]);
 
   const advance = useCallback(() => {
-    setCardKey(k => k + 1);
-    setIndex(i => Math.min(i + 1, data.length - 1));
-  }, [data.length]);
+    setExitingCardIndex(firstVisibleIndex);
+    setTimeout(() => {
+      setRemovedCards(prev => new Set([...prev, firstVisibleIndex]));
+      setExitingCardIndex(null);
+    }, 300);
+  }, [firstVisibleIndex]);
 
-  const choose = useCallback((opt: 'A' | 'B') => {
-    if (phase !== 'playing' || !card || card.type !== 'choice' || !shuffledAB) return;
-    if (opt === shuffledAB.correct) {
-      advance();
+  const choose = useCallback((opt: 'A' | 'B', cardShuffled: any) => {
+    if (phase !== 'playing' || !card || card.type !== 'choice' || !cardShuffled) return;
+    const isCorrect = opt === cardShuffled.correct;
+
+    if (isCorrect) {
+      // 正确：如果有verdict就显示，否则直接进入下一张
+      if (card.verdict) {
+        setAnsweredCards(prev => new Map(prev).set(firstVisibleIndex, { correct: true, selectedOpt: opt }));
+      } else {
+        advance();
+      }
     } else {
+      // 错误：显示反馈
+      setAnsweredCards(prev => new Map(prev).set(firstVisibleIndex, { correct: false, selectedOpt: opt }));
       const nl = lives - 1;
       setLives(nl);
-      setPenalty({ msg: tf(card.penalty) || '判断有误', hint: tf(card.hint) || '' });
-      setPhase(nl <= 0 ? 'gameover' : 'wrong');
+      if (nl <= 0) {
+        setPhase('gameover');
+      }
     }
-  }, [phase, card, shuffledAB, lives, advance, tf]);
+  }, [phase, card, firstVisibleIndex, lives, advance]);
 
   const dismissWrong = useCallback(() => {
     setPhase('playing');
-    setCardKey(k => k + 1);
-    setIndex(i => Math.max(0, i - 10));
-  }, []);
+    // 恢复firstVisibleIndex之前的10张卡片
+    setRemovedCards(prev => {
+      const newSet = new Set(prev);
+      for (let i = Math.max(0, firstVisibleIndex - 10); i < firstVisibleIndex; i++) {
+        newSet.delete(i);
+      }
+      return newSet;
+    });
+    // 清除这些卡片的回答记录（包括当前卡片）
+    setAnsweredCards(prev => {
+      const newMap = new Map(prev);
+      for (let i = Math.max(0, firstVisibleIndex - 10); i <= firstVisibleIndex; i++) {
+        newMap.delete(i);
+      }
+      return newMap;
+    });
+  }, [firstVisibleIndex]);
 
   const restart = useCallback(() => {
     setIndex(0);
     setLives(3);
     setPhase('playing');
     setPenalty({ msg: '', hint: '' });
-    setCardKey(k => k + 1);
+    setRemovedCards(new Set());
+    setExitingCardIndex(null);
+    setAnsweredCards(new Map());
   }, []);
 
   if (!card) return null;
@@ -155,59 +192,116 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
           </div>
         )}
 
-        {/* Progress */}
-        {phase !== 'victory' && (
-          <div style={S.progress}>
-            <div style={{ ...S.progressBar, width: `${(index / data.length) * 100}%` }} />
-          </div>
-        )}
+        {/* Cards container */}
+        {(phase === 'playing' || phase === 'wrong') && (
+          <div style={{ position: 'relative', width: 'min(380px, 90vw)', minHeight: 300 }}>
+            {data.map((cardData, absoluteIndex) => {
+              if (removedCards.has(absoluteIndex)) return null;
 
-        {/* Card */}
-        {(phase === 'playing' || phase === 'wrong') && card && (
-          <div
-            key={cardKey}
-            style={{
-              ...S.card,
-              transform: `rotate(${rot}deg)`,
-              animation: phase === 'wrong'
-                ? 'cardShake .5s ease'
-                : 'cardIn .5s cubic-bezier(.22,.68,0,1.2)',
-              ['--card-r' as string]: `${rot}deg`,
-              background: phase === 'wrong' ? T.cardWrongBg : T.cardBg,
-              boxShadow: T.cardShadow,
-              cursor: card.type === 'story' ? 'pointer' : 'default',
-            }}
-            onClick={card.type === 'story' ? advance : undefined}
-          >
-            <div style={{ ...S.cardInner, border: `1px solid ${T.cardBorder}` }}>
-              {card.act && <div style={{ ...S.actLabel, color: T.actColor }}>{tf(card.act)}</div>}
+              const isFirstVisible = absoluteIndex === firstVisibleIndex;
+              const isExitingCard = absoluteIndex === exitingCardIndex;
+              const cardRot = _isDesktopCard ? 0 : getRot(absoluteIndex);
+              const cardShuffled = shuffleOptions(cardData, absoluteIndex);
 
-              {card.type === 'story' && (
-                <>
-                  <div style={{ ...S.storyText, color: T.textMain }}>{tf(card.text)}</div>
-                  <div style={{ ...S.tapHint, color: T.tapHintColor }}>— 轻触继续 —</div>
-                </>
-              )}
+              return (
+                <div
+                  key={absoluteIndex}
+                  style={{
+                    ...S.card,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    transform: `rotate(${cardRot}deg)`,
+                    animation: isFirstVisible && phase === 'wrong' ? 'mysteryCard_cardShake .5s ease' : 'none',
+                    ['--card-r' as string]: `${cardRot}deg`,
+                    background: isFirstVisible && phase === 'wrong' ? T.cardWrongBg : T.cardBg,
+                    boxShadow: T.cardShadow,
+                    cursor: isFirstVisible && cardData.type === 'story' && !isExitingCard ? 'pointer' : 'default',
+                    zIndex: 1000 - absoluteIndex,
+                    opacity: isExitingCard ? 0 : 1,
+                    transition: isExitingCard ? 'opacity 0.3s ease' : 'none',
+                    pointerEvents: isFirstVisible ? 'auto' : 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    userSelect: 'none',
+                  }}
+                  onClick={isFirstVisible && cardData.type === 'story' && !isExitingCard ? advance : undefined}
+                >
+                  <div style={{ ...S.cardInner, border: `1px solid ${T.cardBorder}` }}>
+                    {cardData.act && <div style={{ ...S.actLabel, color: T.actColor }}>{tf(cardData.act)}</div>}
 
-              {card.type === 'choice' && shuffledAB && (
-                <>
-                  <div style={{ ...S.choiceIcon, color: T.actColor }}> ？</div>
-                  <div style={{ ...S.choiceQuestion, color: T.textMain }}>{tf(card.text)}</div>
-                  <div style={S.choiceRow}>
-                    {(['A', 'B'] as const).map(opt => (
-                      <button key={opt} style={{ ...S.choiceBtn, border: `1px solid ${T.choiceBorder}`, color: T.textMain }} onClick={() => choose(opt)}>
-                        <span style={{ ...S.choiceLetter, color: T.actColor }}>{opt}</span>
-                        <span style={S.choiceText}>
-                          {tf(opt === 'A' ? shuffledAB.optA : shuffledAB.optB)}
-                        </span>
-                      </button>
-                    ))}
+                    {cardData.type === 'story' && (
+                      <>
+                        <div style={{ ...S.storyText, color: T.textMain }}>{tf(cardData.text)}</div>
+                      </>
+                    )}
+
+                    {cardData.type === 'choice' && cardShuffled && (() => {
+                      const answerState = answeredCards.get(absoluteIndex);
+
+                      if (!answerState) {
+                        // 未回答：显示问题和选项
+                        return (
+                          <>
+                            <div style={{ ...S.choiceIcon, color: T.actColor }}> ？</div>
+                            <div style={{ ...S.choiceQuestion, color: T.textMain }}>{tf(cardData.text)}</div>
+                            <div style={S.choiceRow}>
+                              {(['A', 'B'] as const).map(opt => (
+                                <button
+                                  key={opt}
+                                  style={{
+                                    ...S.choiceBtn,
+                                    border: `1px solid ${T.choiceBorder}`,
+                                    color: T.textMain,
+                                    WebkitTapHighlightColor: 'transparent',
+                                    transition: 'none',
+                                  }}
+                                  onClick={isFirstVisible ? () => choose(opt, cardShuffled) : undefined}
+                                  disabled={!isFirstVisible}
+                                >
+                                  <span style={{ ...S.choiceLetter, color: T.actColor }}>{opt}</span>
+                                  <span style={S.choiceText}>
+                                    {tf(opt === 'A' ? cardShuffled.optA : cardShuffled.optB)}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        );
+                      } else {
+                        // 已回答：显示反馈
+                        if (answerState.correct) {
+                          return (
+                            <>
+                              <div style={{ ...S.storyText, color: T.textMain, marginBottom: 20 }}>{tf(cardData.verdict)}</div>
+                              <button onClick={advance} style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }}>
+                                继续
+                              </button>
+                            </>
+                          );
+                        } else {
+                          return (
+                            <>
+                              <div style={{ ...S.storyText, color: '#ef4444', fontSize: '1.1rem', marginBottom: 12 }}>✗ 判断有误</div>
+                              <div style={{ ...S.overlayMsg, color: T.textMain, marginBottom: 12 }}>{tf(cardData.penalty)}</div>
+                              {cardData.hint && (
+                                <div style={{ ...S.overlayHint, color: T.textSub, border: `1px solid ${T.choiceBorder}`, marginBottom: 16 }}>
+                                  <span style={{ color: T.actColor }}>提示：</span>{tf(cardData.hint)}
+                                </div>
+                              )}
+                              <button onClick={dismissWrong} style={{ ...S.startBtn, border: `1px solid #ef4444`, color: '#ef4444' }}>
+                                倒退十张，重新审视
+                              </button>
+                            </>
+                          );
+                        }
+                      }
+                    })()}
                   </div>
-                </>
-              )}
-            </div>
-            <div style={{ ...S.cardCornerTL, borderColor: T.cornerColor }} />
-            <div style={{ ...S.cardCornerBR, borderColor: T.cornerColor }} />
+                  <div style={{ ...S.cardCornerTL, borderColor: T.cornerColor }} />
+                  <div style={{ ...S.cardCornerBR, borderColor: T.cornerColor }} />
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -258,13 +352,13 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
         {/* Victory overlay */}
         {phase === 'victory' && (
           <div style={{ ...S.overlay, background: '#0A0A0Fdd' }}>
-            <div style={{ ...S.card, background: T.cardBg, boxShadow: T.cardShadow, transform: 'rotate(-1deg)', animation: 'cardIn .8s ease', maxWidth: 380 }}>
+            <div style={{ ...S.card, background: T.cardBg, boxShadow: T.cardShadow, transform: 'rotate(-1deg)', animation: 'mysteryCard_cardIn .8s ease', maxWidth: 380 }}>
               <div style={{ ...S.cardInner, border: `1px solid ${T.cardBorder}` }}>
                 {card.act && <div style={{ ...S.actLabel, color: T.actColor }}>{tf(card.act)}</div>}
                 <div style={{ ...S.storyText, color: T.textMain, whiteSpace: 'pre-line', lineHeight: 2 }}>
                   {tf(card.verdict || card.text)}
                 </div>
-                <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>
+                <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'mysteryCard_cardGlow 2s infinite' }}>
                   ✦ 故事完结 ✦
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
@@ -393,7 +487,7 @@ const S: Record<string, React.CSSProperties> = {
     fontFamily: 'inherit', padding: '4px 8px',
   },
   lives: {
-    position: 'absolute', top: 20, right: 20,
+    position: 'absolute', bottom: 20, right: 20,
     display: 'flex', alignItems: 'center', gap: 6, zIndex: 10,
   },
   lifeGem: {
@@ -503,7 +597,7 @@ const S: Record<string, React.CSSProperties> = {
     position: 'fixed', inset: '0', zIndex: 100,
     background: '#0A0A0Fcc',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    animation: 'cardFadeIn .3s ease', padding: 20,
+    animation: 'mysteryCard_cardFadeIn .3s ease', padding: 20,
   },
   overlayBox: {
     background: '#F4EAD5', border: '1px solid #C4A882',

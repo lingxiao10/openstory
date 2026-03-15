@@ -5,7 +5,7 @@ const creatingSet = new Set<string>();
 
 export class StoryController {
   static async create(req: Request, res: Response) {
-    const userId = req.user!.userId;
+    const userId = (req as any).userId;
     if (creatingSet.has(userId)) {
       return res.status(409).json({ error: '正在创建中，请勿重复提交 / Already creating, please wait' });
     }
@@ -25,7 +25,7 @@ export class StoryController {
 
   static async list(req: Request, res: Response) {
     try {
-      const stories = await StoryService.getUserStories(req.user!.userId);
+      const stories = await StoryService.getUserStories((req as any).userId);
       res.json(stories);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -34,7 +34,7 @@ export class StoryController {
 
   static async get(req: Request, res: Response) {
     try {
-      const story = await StoryService.getStory(req.params.id, req.user!.userId);
+      const story = await StoryService.getStory(req.params.id, (req as any).userId);
       res.json(story);
     } catch (err: any) {
       res.status(404).json({ error: err.message });
@@ -45,7 +45,7 @@ export class StoryController {
     try {
       const { outline } = req.body;
       if (!outline) return res.status(400).json({ error: 'Missing outline' });
-      const id = await StoryService.addChapter(req.params.id, req.user!.userId, outline);
+      const id = await StoryService.addChapter(req.params.id, (req as any).userId, outline);
       res.status(201).json({ id });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -56,7 +56,7 @@ export class StoryController {
     try {
       const { outline } = req.body;
       if (!outline) return res.status(400).json({ error: 'Missing outline' });
-      await StoryService.updateChapterOutline(req.params.id, req.params.chapterId, req.user!.userId, outline);
+      await StoryService.updateChapterOutline(req.params.id, req.params.chapterId, (req as any).userId, outline);
       res.json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -65,7 +65,7 @@ export class StoryController {
 
   static async deleteChapter(req: Request, res: Response) {
     try {
-      await StoryService.deleteChapter(req.params.id, req.params.chapterId, req.user!.userId);
+      await StoryService.deleteChapter(req.params.id, req.params.chapterId, (req as any).userId);
       res.json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -74,7 +74,7 @@ export class StoryController {
 
   static async deleteStory(req: Request, res: Response) {
     try {
-      const result = await StoryService.deleteStory(req.params.id, req.user!.userId);
+      const result = await StoryService.deleteStory(req.params.id, (req as any).userId);
       res.json({ ok: true, publishedCount: result.publishedCount });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -83,7 +83,7 @@ export class StoryController {
 
   static async publishChapter(req: Request, res: Response) {
     try {
-      await StoryService.publishChapter(req.params.id, req.params.chapterId, req.user!.userId);
+      await StoryService.publishChapter(req.params.id, req.params.chapterId, (req as any).userId);
       res.json({ ok: true });
     } catch (err: any) {
       const code = err.message === 'Previous chapter must be published first' ? 'PREV_CHAPTER_NOT_PUBLISHED' : undefined;
@@ -93,7 +93,7 @@ export class StoryController {
 
   static async unpublishChapter(req: Request, res: Response) {
     try {
-      await StoryService.unpublishChapter(req.params.id, req.params.chapterId, req.user!.userId);
+      await StoryService.unpublishChapter(req.params.id, req.params.chapterId, (req as any).userId);
       res.json({ ok: true });
     } catch (err: any) {
       res.status(400).json({ error: err.message });

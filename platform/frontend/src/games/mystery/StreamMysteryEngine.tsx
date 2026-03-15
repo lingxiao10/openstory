@@ -35,13 +35,17 @@ interface Props {
 }
 
 const ROTS = [-2.3, 1.8, -1.2, 2.7, -3.1, 0.9, 2.0, -1.7, 3.2, -0.8, 1.5, -2.5, -0.4, 2.2, -1.9, 1.1];
-const getRot = (i: number) => ROTS[((i % ROTS.length) + ROTS.length) % ROTS.length];
+const getRot = (i: number) => ROTS[((i % ROTS.length) + ROTS.length) % ROTS.length] * 0.4;
 
 const FONT_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
   @keyframes cardIn {
     from { opacity: 0; }
     to   { opacity: 1; }
+  }
+  @keyframes cardOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
   }
   @keyframes cardShake {
     0%,100% { transform: translateX(0) rotate(var(--card-r, 0deg)); }
@@ -85,7 +89,9 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   const T = cardTone === 'dark' ? darkTone : lightTone;
 
   const card = data[index] as Card | undefined;
+  const nextCard = data[index + 1] as Card | undefined;
   const rot = getRot(index);
+  const nextRot = getRot(index + 1);
 
   // Derived: should we show the waiting hint?
   const showWaiting = isWaiting && index === data.length - 1 && card?.type !== 'victory' && card?.type !== 'verdict';
@@ -108,7 +114,6 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = useCallback(() => {
-    setCardKey(k => k + 1);
     setIndex(i => Math.min(i + 1, data.length - 1));
   }, [data.length]);
 
@@ -165,11 +170,6 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
           </div>
         )}
 
-        {phase !== 'victory' && (
-          <div style={S.progress}>
-            <div style={{ ...S.progressBar, width: `${(index / Math.max(data.length, 1)) * 100}%` }} />
-          </div>
-        )}
 
         {/* Waiting badge */}
         {showWaiting && (
@@ -184,9 +184,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
             style={{
               ...S.card,
               transform: `rotate(${rot}deg)`,
-              animation: phase === 'wrong'
-                ? 'cardShake .5s ease'
-                : 'cardIn .5s cubic-bezier(.22,.68,0,1.2)',
+              animation: phase === 'wrong' ? 'cardShake .5s ease' : 'cardIn .2s ease',
               ['--card-r' as string]: `${rot}deg`,
               background: phase === 'wrong' ? T.cardWrongBg : T.cardBg,
               boxShadow: T.cardShadow,
@@ -328,7 +326,7 @@ const S: Record<string, React.CSSProperties> = {
   bgPattern: { position: 'absolute', inset: '0', zIndex: 0, pointerEvents: 'none', backgroundSize: '12px 12px' },
   bgVignette: { position: 'absolute', inset: '0', zIndex: 0, pointerEvents: 'none' },
   backBtn: { position: 'absolute', top: 16, left: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', fontFamily: 'inherit', padding: '4px 8px' },
-  lives: { position: 'absolute', top: 20, right: 20, display: 'flex', alignItems: 'center', gap: 6, zIndex: 10 },
+  lives: { position: 'absolute', bottom: 20, right: 20, display: 'flex', alignItems: 'center', gap: 6, zIndex: 10 },
   lifeGem: { color: '#C9A84C', fontSize: 16, transition: 'opacity .4s', textShadow: '0 0 8px #C9A84C88' },
   progress: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: '#ffffff0d', zIndex: 10 },
   progressBar: { height: '100%', background: 'linear-gradient(90deg,#8B6914,#C9A84C)', transition: 'width .4s ease' },
