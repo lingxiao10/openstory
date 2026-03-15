@@ -5,6 +5,7 @@ export const translations = {
   nav_login:    { zh: '登录',       en: 'Login' },
   nav_register: { zh: '注册',       en: 'Register' },
   nav_logout:   { zh: '退出',       en: 'Logout' },
+  nav_language:  { zh: '语言',       en: 'Language' },
 
   // home
   home_title:    { zh: '轻几互动小说', en: 'OpenStory' },
