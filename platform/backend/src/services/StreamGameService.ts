@@ -521,7 +521,8 @@ ${endingInstruction}${playerPrompt}${prevContext}
 - 生命归零=死亡，关键节点可扣3-4点，普通节点扣1-2点
 - itemDefs 只定义本章会出现的道具（0-4个）
 - statDefs 必须恰好4个属性，键名用英文小写，根据故事主题自行设计（不必照搬示例）
-- 最后一个节点用 type:"end"，text 写通关文本
+- giveItem 和 bonusIf 是可选字段，不需要时省略
+- 最后一个节点用 type:"end"，text 写通关文本，不需要winText时可省略
 
 输出：`;
   }
@@ -558,10 +559,79 @@ ${endingInstruction}${playerPrompt}${prevContext}
     };
     sessions.set(storyId, session);
 
-    // 后台开始生成
-    StreamGameService.generateAllChapters(session, story, chapters).catch(err => {
-      logger.error(`[StreamGame] generateAllChapters error: ${err.message}`);
-    });
+    // 检查是否所有章节都已生成
+    const allGenerated = chapters.every(c => c.is_generated && c.content_json);
+
+    if (allGenerated) {
+      // 所有章节已生成，直接发送已有数据
+      logger.info(`[StreamGame] all chapters already generated, sending existing data`);
+      StreamGameService.sendExistingData(session, story, chapters);
+    } else {
+      // 有未生成的章节，继续生成
+      logger.info(`[StreamGame] some chapters not generated, starting generation`);
+      StreamGameService.generateAllChapters(session, story, chapters).catch(err => {
+        logger.error(`[StreamGame] generateAllChapters error: ${err.message}`);
+      });
+    }
+  }
+
+  // ── 11.5. 发送已存在的数据 ──────────────────────────────────────────────────
+
+  private static sendExistingData(session: StreamSession, story: Story, chapters: Chapter[]) {
+    const { genre } = session;
+
+    // 发送outline事件
+    const outlineData = {
+      chapters: chapters.map(c => ({
+        num: c.chapter_num,
+        zh: c.outline_zh || `第${c.chapter_num}章`,
+        en: c.outline_en || `Chapter ${c.chapter_num}`,
+      })),
+    };
+    StreamGameService.broadcast(session, 'outline', outlineData);
+
+    // 发送每个章节的数据
+    for (const chapter of chapters) {
+      if (!chapter.content_json) continue;
+
+      try {
+        const data = JSON.parse(chapter.content_json);
+
+        if (genre === 'numeric') {
+          // 发送meta
+          const meta = {
+            title: data.title,
+            description: data.description,
+            statDefs: data.statDefs,
+            itemDefs: data.itemDefs,
+            winText: data.winText,
+          };
+          StreamGameService.broadcast(session, 'meta', { chapter: chapter.chapter_num, meta });
+
+          // 发送nodes
+          const cards = data.cards || [];
+          for (const card of cards) {
+            StreamGameService.broadcast(session, 'node', { chapter: chapter.chapter_num, node: card });
+          }
+        } else {
+          // mystery模式，直接发送nodes
+          const nodes = Array.isArray(data) ? data : [];
+          for (const node of nodes) {
+            StreamGameService.broadcast(session, 'node', { chapter: chapter.chapter_num, node });
+          }
+        }
+
+        // 发送chapter_done
+        StreamGameService.broadcast(session, 'chapter_done', { chapter: chapter.chapter_num });
+      } catch (err: any) {
+        logger.error(`[StreamGame] failed to parse chapter ${chapter.chapter_num}: ${err.message}`);
+      }
+    }
+
+    // 发送done事件
+    session.generationDone = true;
+    StreamGameService.broadcast(session, 'done', {});
+    logger.info(`[StreamGame] existing data sent for storyId=${session.storyId}`);
   }
 
   // ── 12. 会话状态查询 ──────────────────────────────────────────────────────
