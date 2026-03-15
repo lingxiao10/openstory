@@ -71,7 +71,7 @@ export function StoryReader() {
   return (
     <div style={rootStyle}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 20px 80px' }}>
-        <button onClick={() => navigate(-1)} style={backBtnStyle}>← {t('game_back')}</button>
+        <button onClick={() => navigate('/')} style={backBtnStyle}>← {t('game_back')}</button>
 
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <h1 style={{ color: '#e2e8f0', fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>{title}</h1>
@@ -92,7 +92,7 @@ export function StoryReader() {
               <button
                 key={ch.id}
                 disabled={locked}
-                onClick={() => !locked && navigate(`/stream-game/${id}?chapter=${ch.chapter_num}`)}
+                onClick={() => !locked && navigate(`/stream-game/${id}?chapter=${ch.chapter_num}`, { state: { from: `/story/${id}` } })}
                 style={{
                   background: locked ? '#0f172a' : isDone ? '#16a34a11' : '#1e293b',
                   border: `1px solid ${locked ? '#1e293b' : isDone ? '#22c55e44' : '#334155'}`,

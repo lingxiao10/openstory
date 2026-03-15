@@ -21,7 +21,7 @@
  */
 
 import { useState, useEffect, useRef, useContext, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../store/authStore';
 import { StreamMysteryEngine } from '../games/mystery/StreamMysteryEngine';
 import { StreamNumericEngine } from '../games/numeric/StreamNumericEngine';
@@ -48,8 +48,11 @@ type PagePhase = 'connecting' | 'outline' | 'playing' | 'transition' | 'all_done
 export function StreamGamePage() {
   const { storyId } = useParams<{ storyId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = useContext(AuthContext);
   const startChapter = parseInt(new URLSearchParams(window.location.search).get('chapter') ?? '1') || 1;
+  const fromPath: string | undefined = (location.state as any)?.from;
+  const goBack = useCallback(() => { fromPath ? navigate(fromPath) : navigate(-1); }, [fromPath, navigate]);
   const { t, lang } = useI18n();
   const { setBgmActive } = useAudio();
 
@@ -75,11 +78,11 @@ export function StreamGamePage() {
   // ── Initialize session ──────────────────────────────────────────────────────
 
   const initializeSession = useCallback(async () => {
-    if (!storyId || !token) return false;
+    if (!storyId) return false;
 
     try {
       // Check if session exists
-      const statusRes = await fetch(`/api/stream-game/${storyId}/status?token=${encodeURIComponent(token)}`);
+      const statusRes = await fetch(`/api/stream-game/${storyId}/status`);
       const statusData = await statusRes.json();
 
       if (statusData.found) {
@@ -89,9 +92,11 @@ export function StreamGamePage() {
       }
 
       // Session doesn't exist, create it
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       const resumeRes = await fetch(`/api/stream-game/${storyId}/resume`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers,
       });
 
       if (!resumeRes.ok) {
@@ -100,7 +105,7 @@ export function StreamGamePage() {
       }
 
       // After resume, check if all chapters were already generated
-      const statusRes2 = await fetch(`/api/stream-game/${storyId}/status?token=${encodeURIComponent(token)}`);
+      const statusRes2 = await fetch(`/api/stream-game/${storyId}/status`);
       const statusData2 = await statusRes2.json();
       if (statusData2.done) setIsGenerating(false);
 
@@ -115,10 +120,10 @@ export function StreamGamePage() {
   // ── SSE connection ───────────────────────────────────────────────────────────
 
   const connectSse = useCallback(() => {
-    if (!storyId || !token) return;
+    if (!storyId) return;
     if (sseRef.current) sseRef.current.close();
 
-    const url = `/api/stream-game/${storyId}/events?token=${encodeURIComponent(token)}`;
+    const url = `/api/stream-game/${storyId}/events`;
     const sse = new EventSource(url);
     sseRef.current = sse;
 
@@ -248,14 +253,14 @@ export function StreamGamePage() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   if (phase === 'connecting') {
-    return <LoadingScreen message={t('stream_connecting')} onBack={() => navigate('/my-stories')} />;
+    return <LoadingScreen message={t('stream_connecting')} onBack={() => goBack()} />;
   }
 
   if (phase === 'fatal_error') {
     return (
       <ErrorScreen
         message={fatalError}
-        onBack={() => navigate('/my-stories')}
+        onBack={() => goBack()}
         onRetry={connectSse}
       />
     );
@@ -267,11 +272,11 @@ export function StreamGamePage() {
   }
 
   if (phase === 'all_done') {
-    return <AllDoneScreen onBack={() => navigate('/my-stories')} />;
+    return <AllDoneScreen onBack={() => goBack()} />;
   }
 
   if (!currentChapter) {
-    return <LoadingScreen message={t('stream_loadingChapter')} onBack={() => navigate('/my-stories')} />;
+    return <LoadingScreen message={t('stream_loadingChapter')} onBack={() => goBack()} />;
   }
 
   // Show chapter error
@@ -279,7 +284,7 @@ export function StreamGamePage() {
     return (
       <ErrorScreen
         message={t('stream_chapterFailed').replace('{n}', String(currentChapter.num)) + currentChapter.errorMsg}
-        onBack={() => navigate('/my-stories')}
+        onBack={() => goBack()}
         onRetry={() => handleRetry(currentChapter.num)}
       />
     );
@@ -291,7 +296,7 @@ export function StreamGamePage() {
       <LoadingScreen
         message={t('stream_chapterGenerating').replace('{n}', String(currentChapter.num))}
         subMessage={lang === 'en' ? (currentChapter.outlineEn || currentChapter.outlineZh) : currentChapter.outlineZh}
-        onBack={() => navigate('/my-stories')}
+        onBack={() => goBack()}
       />
     );
   }
@@ -308,14 +313,14 @@ export function StreamGamePage() {
     };
     // Wait for meta before rendering (statDefs needed)
     if (!currentChapter.numericMeta) {
-      return <LoadingScreen message={t('stream_loadingData')} onBack={() => navigate('/my-stories')} />;
+      return <LoadingScreen message={t('stream_loadingData')} onBack={() => goBack()} />;
     }
     return (
       <StreamNumericEngine
         gameData={numericGameData}
         isWaiting={isWaiting}
         onVictory={handleVictory}
-        onBack={() => navigate('/my-stories')}
+        onBack={() => goBack()}
       />
     );
   }
@@ -326,7 +331,7 @@ export function StreamGamePage() {
       gameData={{ cards: currentChapter.cards }}
       isWaiting={isWaiting}
       onVictory={handleVictory}
-      onBack={() => navigate('/my-stories')}
+      onBack={() => goBack()}
     />
   );
 }
