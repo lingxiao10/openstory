@@ -5,6 +5,10 @@ interface DayStat {
   date: string;
   newUsers: number;
   reads: number;
+  newUserReaders: number;
+  newUserReads: number;
+  newStories: number;
+  newUserStoriers: number;
 }
 
 export function Stats() {
@@ -45,9 +49,13 @@ export function Stats() {
       <table style={S.table}>
         <thead>
           <tr>
-            <th style={S.th}>{t('stats_date')}</th>
-            <th style={S.th}>{t('stats_newUsers')}</th>
-            <th style={S.th}>{t('stats_reads')}</th>
+            <th style={S.th}>日期</th>
+            <th style={S.th}>新用户</th>
+            <th style={S.th}>新用户阅读人数</th>
+            <th style={S.th}>新用户阅读篇数</th>
+            <th style={S.th}>新用户创建故事人数</th>
+            <th style={S.th}>新增故事数</th>
+            <th style={S.th}>总阅读次数</th>
           </tr>
         </thead>
         <tbody>
@@ -55,6 +63,10 @@ export function Stats() {
             <tr key={stat.date}>
               <td style={S.td}>{stat.date}</td>
               <td style={S.td}>{stat.newUsers}</td>
+              <td style={S.td}>{stat.newUserReaders}</td>
+              <td style={S.td}>{stat.newUserReads}</td>
+              <td style={S.td}>{stat.newUserStoriers}</td>
+              <td style={S.td}>{stat.newStories}</td>
               <td style={S.td}>{stat.reads}</td>
             </tr>
           ))}
@@ -65,9 +77,9 @@ export function Stats() {
 }
 
 const S: Record<string, React.CSSProperties> = {
-  container: { padding: 40, maxWidth: 800, margin: '0 auto' },
-  title: { marginBottom: 30, fontSize: 24 },
+  container: { padding: 40, maxWidth: 800, margin: '0 auto', background: '#fff', color: '#333', minHeight: '100vh' },
+  title: { marginBottom: 30, fontSize: 24, color: '#333' },
   table: { width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' },
-  th: { padding: 12, background: '#f5f5f5', border: '1px solid #ddd', textAlign: 'left' },
-  td: { padding: 12, border: '1px solid #ddd' },
+  th: { padding: 12, background: '#f5f5f5', border: '1px solid #ddd', textAlign: 'left', color: '#333' },
+  td: { padding: 12, border: '1px solid #ddd', color: '#333' },
 };

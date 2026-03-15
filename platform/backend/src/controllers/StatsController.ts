@@ -34,10 +34,44 @@ export class StatsController {
           [dateStr]
         );
 
+        // New users who read at least one chapter
+        const [newUserReaders] = await db.query(
+          `SELECT COUNT(DISTINCT cr.user_id) as count FROM chapter_reads cr
+           JOIN users u ON u.id = cr.user_id
+           WHERE DATE(u.created_at) = ?`,
+          [dateStr]
+        );
+
+        // Total reads by new users
+        const [newUserReads] = await db.query(
+          `SELECT COUNT(*) as count FROM chapter_reads cr
+           JOIN users u ON u.id = cr.user_id
+           WHERE DATE(u.created_at) = ?`,
+          [dateStr]
+        );
+
+        // New stories count
+        const [newStories] = await db.query(
+          'SELECT COUNT(*) as count FROM stories WHERE DATE(created_at) = ?',
+          [dateStr]
+        );
+
+        // New users who created at least one story
+        const [newUserStoriers] = await db.query(
+          `SELECT COUNT(DISTINCT s.user_id) as count FROM stories s
+           JOIN users u ON u.id = s.user_id
+           WHERE DATE(u.created_at) = ?`,
+          [dateStr]
+        );
+
         stats.push({
           date: dateStr,
           newUsers: (newUsers as any[])[0]?.count || 0,
           reads: (reads as any[])[0]?.count || 0,
+          newUserReaders: (newUserReaders as any[])[0]?.count || 0,
+          newUserReads: (newUserReads as any[])[0]?.count || 0,
+          newStories: (newStories as any[])[0]?.count || 0,
+          newUserStoriers: (newUserStoriers as any[])[0]?.count || 0,
         });
       }
 

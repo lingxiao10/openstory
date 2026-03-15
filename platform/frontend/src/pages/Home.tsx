@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { GameCard } from '../components/GameCard';
@@ -7,6 +7,139 @@ import { queryWork } from '../api/queryWork';
 import { useI18n } from '../i18n';
 import { TranslationKey } from '../i18n/translations';
 import { useAudio } from '../components/AudioManager';
+import { AuthContext } from '../store/authStore';
+
+function LoginModal({ onSuccess }: { onSuccess: () => void }) {
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [needCheckEmail, setNeedCheckEmail] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const { login } = useContext(AuthContext);
+  const { t } = useI18n();
+
+  useEffect(() => {
+    queryWork<{ need_check_email: boolean }>('/api/auth/config')
+      .then(d => setNeedCheckEmail(d.need_check_email))
+      .catch(() => {});
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const data = await queryWork<{ token: string; user: any }>('/api/auth/login', {
+        method: 'POST', body: { email, password },
+      });
+      login(data.user, data.token);
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message || t('auth_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendCode = async () => {
+    setError('');
+    setSendingCode(true);
+    try {
+      await queryWork('/api/auth/send-code', { method: 'POST', body: { email } });
+      setCodeSent(true);
+    } catch (err: any) {
+      setError(err.message || t('auth_error'));
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const data = await queryWork<{ token: string; user: any }>('/api/auth/register', {
+        method: 'POST', body: { username, email, password, ...(needCheckEmail ? { code } : {}) },
+      });
+      login(data.user, data.token);
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message || t('auth_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '12px 16px',
+    color: '#e2e8f0', fontSize: 15, outline: 'none', width: '100%', boxSizing: 'border-box',
+  };
+  const btnStyle: React.CSSProperties = {
+    background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10, padding: '13px',
+    fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 4,
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{
+        background: '#0f172a', border: '1px solid #334155', borderRadius: 20,
+        padding: '40px 36px', width: '100%', maxWidth: 420, boxSizing: 'border-box',
+      }}>
+        <h2 style={{ color: '#e2e8f0', marginBottom: 28, textAlign: 'center', fontSize: 24, fontWeight: 800 }}>
+          {mode === 'login' ? t('auth_loginTitle') : t('auth_registerTitle')}
+        </h2>
+
+        {error && (
+          <div style={{ background: '#7f1d1d22', border: '1px solid #ef4444', borderRadius: 8, padding: '10px 14px', color: '#ef4444', fontSize: 13, marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
+
+        {mode === 'login' ? (
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <input type="email" placeholder={t('auth_email')} value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
+            <input type="password" placeholder={t('auth_password')} value={password} onChange={e => setPassword(e.target.value)} required style={inputStyle} />
+            <button type="submit" disabled={loading} style={btnStyle}>{loading ? t('common_loading') : t('auth_login')}</button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <input type="text" placeholder={t('auth_username')} value={username} onChange={e => setUsername(e.target.value)} required style={inputStyle} />
+            <input type="email" placeholder={t('auth_email')} value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
+            {needCheckEmail && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input type="text" placeholder={t('auth_verifyCode')} value={code} onChange={e => setCode(e.target.value)} required style={{ ...inputStyle, flex: 1 }} />
+                <button type="button" onClick={handleSendCode} disabled={sendingCode || !email} style={{ background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 10, padding: '0 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {sendingCode ? '...' : codeSent ? t('auth_resend') : t('auth_sendCode')}
+                </button>
+              </div>
+            )}
+            {codeSent && <div style={{ color: '#4ade80', fontSize: 13 }}>{t('auth_codeSent')}</div>}
+            <input type="password" placeholder={t('auth_password')} value={password} onChange={e => setPassword(e.target.value)} required style={inputStyle} />
+            <button type="submit" disabled={loading} style={btnStyle}>{loading ? t('common_loading') : t('auth_register')}</button>
+          </form>
+        )}
+
+        <p style={{ textAlign: 'center', color: '#64748b', marginTop: 20, fontSize: 14 }}>
+          {mode === 'login' ? (
+            <>{t('auth_noAccount')}{' '}<span onClick={() => { setMode('register'); setError(''); }} style={{ color: '#6366f1', cursor: 'pointer' }}>{t('auth_registerLink')}</span></>
+          ) : (
+            <>{t('auth_hasAccount')}{' '}<span onClick={() => { setMode('login'); setError(''); }} style={{ color: '#6366f1', cursor: 'pointer' }}>{t('auth_loginLink')}</span></>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function Home() {
   const [games, setGames] = useState<GameIndex[]>([]);
@@ -16,6 +149,7 @@ export function Home() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { playClick } = useAudio();
+  const { isLoggedIn } = useContext(AuthContext);
 
   useEffect(() => {
     Promise.all([
@@ -33,6 +167,7 @@ export function Home() {
 
   return (
     <Layout>
+      {!isLoggedIn && <LoginModal onSuccess={() => {}} />}
       <style>{`
         @keyframes shimmer {
           0% { background-position: -200% center; }

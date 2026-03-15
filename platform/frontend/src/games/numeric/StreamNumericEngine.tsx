@@ -291,7 +291,7 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
               ['--card-r' as string]: `${rot}deg`,
               background: T.cardBg,
               boxShadow: T.cardShadow,
-              cursor: card.type === 'story' ? 'pointer' : 'default',
+              cursor: 'default',
             }}
             onClick={card.type === 'story' && !waiting ? advance : undefined}
           >
