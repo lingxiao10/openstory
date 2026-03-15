@@ -133,6 +133,9 @@
 - Header 已移除：音乐按钮、管理/数据统计链接
 - 管理/数据统计按钮移至 MyStories 页面底部（分割线下方），仅 isAdmin 可见
 - AudioManager 仍存在但 Header 不再引用它（游戏内部可能仍用）
+- Header 用户菜单：登录后显示昵称（截断8字符）+头像首字母圆圈，点击展开下拉菜单（我的故事/语言选择/退出）
+- 未登录时：地球图标按钮展开语言选择面板 + 登录按钮
+- LanguageSwitcher 组件不再被引用（功能已合并到 Header 内部）
 
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`

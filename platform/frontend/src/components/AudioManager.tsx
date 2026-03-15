@@ -38,6 +38,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     clickRef.current = new Audio('/click.mp3');
     clickRef.current.volume = 0.5;
+    console.log('[AudioManager] clickRef initialized, src:', clickRef.current.src);
+    clickRef.current.addEventListener('error', (e) => {
+      console.error('[AudioManager] click.mp3 load error:', e, clickRef.current?.error);
+    });
 
     return () => {
       bgmRef.current?.pause();
@@ -65,10 +69,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   };
 
   const playClick = () => {
+    console.log('[AudioManager] playClick called, unlocked:', unlocked, 'clickRef:', !!clickRef.current, 'src:', clickRef.current?.src);
     if (!unlocked) setUnlocked(true);
     if (clickRef.current) {
       clickRef.current.currentTime = 0;
-      clickRef.current.play().catch(() => {});
+      clickRef.current.play().then(() => {
+        console.log('[AudioManager] click.mp3 play() resolved OK');
+      }).catch((e) => {
+        console.warn('[AudioManager] click.mp3 play() failed:', e);
+      });
+    } else {
+      console.warn('[AudioManager] clickRef.current is null, cannot play click.mp3');
     }
   };
 
