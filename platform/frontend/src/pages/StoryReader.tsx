@@ -86,7 +86,7 @@ export function StoryReader() {
           {story.chapters.map((ch, i) => {
             const isDone = completed.includes(ch.id);
             const prevDone = i === 0 || completed.includes(story.chapters[i - 1].id);
-            const locked = !ch.is_generated || (!prevDone && !isDone);
+            const locked = false; // TODO: restore locking: !ch.is_generated || (!prevDone && !isDone)
 
             return (
               <button
@@ -115,12 +115,6 @@ export function StoryReader() {
                       </div>
                     );
                   })()}
-                  {ch.content_json && (
-                    <div style={{ color: '#6366f1', fontSize: 11, marginTop: 4 }}>{t('reader_interactive')}</div>
-                  )}
-                  {isOwner && !ch.published && (
-                    <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>{t('reader_unpublished')}</div>
-                  )}
                 </div>
                 <div style={{ fontSize: 18, flexShrink: 0, marginLeft: 12, color: '#ffffff' }}>
                   {locked ? '🔒' : isDone ? '✓' : '▶'}

@@ -240,7 +240,7 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
                 boxShadow: T.cardShadow,
                 transform: `rotate(${rot}deg)`,
                 animation: exiting ? 'cardOut 0.6s ease 0.1s forwards' : 'cardIn .4s cubic-bezier(.22,.68,0,1.2)',
-                cursor: exiting ? 'default' : 'pointer',
+                cursor: 'default',
                 pointerEvents: exiting ? 'none' : 'auto'
               }}
             >
@@ -289,7 +289,7 @@ export function NumericEngine({ gameData, onVictory, isLastChapter }: Props) {
                 transform: `rotate(${rot}deg)`,
                 ['--card-r' as string]: `${rot}deg`,
                 animation: exiting ? 'cardOut 1.2s ease forwards' : 'cardIn 0.2s ease',
-                cursor: card.type === 'story' ? 'pointer' : 'default',
+                cursor: 'default',
                 willChange: 'opacity, transform',
                 pointerEvents: exiting ? 'none' : 'auto',
               }}
@@ -437,8 +437,8 @@ const S: Record<string, React.CSSProperties> = {
   backBtn: { position: 'absolute', top: 16, left: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', fontFamily: 'inherit', padding: '4px 8px' },
   progress: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: '#ffffff0d', zIndex: 10 },
   progressBar: { height: '100%', background: 'linear-gradient(90deg, #8B6914, #C9A84C)', transition: 'width .4s ease' },
-  card: { position: 'relative', width: 'min(380px, 90vw)', minHeight: 300, borderRadius: 4, zIndex: 1, padding: 0 },
-  cardInner: { padding: '32px 28px 28px', margin: 8, minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 },
+  card: { position: 'relative', width: 'min(380px, 90vw)', minHeight: 316, borderRadius: 4, zIndex: 1, padding: 0 },
+  cardInner: { padding: '32px 28px 28px', margin: 8, minHeight: 276, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 },
   cardCornerTL: { position: 'absolute', top: 10, left: 10, width: 18, height: 18, borderTop: '1.5px solid', borderLeft: '1.5px solid' },
   cardCornerBR: { position: 'absolute', bottom: 10, right: 10, width: 18, height: 18, borderBottom: '1.5px solid', borderRight: '1.5px solid' },
   actLabel: { fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 18, opacity: 0.85, fontFamily: "'Playfair Display', Georgia, serif" },
@@ -446,8 +446,8 @@ const S: Record<string, React.CSSProperties> = {
   tapHint: { fontSize: '0.6rem', letterSpacing: '0.2em', marginTop: 24, fontFamily: 'Georgia, serif' },
   choiceIcon: { fontSize: '1.8rem', marginBottom: 12, opacity: 0.6 },
   choiceQuestion: { fontSize: '0.95rem', lineHeight: 1.8, textAlign: 'center', marginBottom: 20, letterSpacing: '0.05em' },
-  choiceRow: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%' },
-  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', fontFamily: 'inherit', width: '100%', outline: 'none' },
+  choiceRow: { display: 'flex', flexDirection: 'column', gap: 18, width: '100%' },
+  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '14px 12px', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', fontFamily: 'inherit', width: '100%', outline: 'none' },
   choiceLetter: { fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: '1rem', minWidth: 18, marginTop: 1 },
   choiceText: { fontSize: '0.88rem', lineHeight: 1.6, letterSpacing: '0.04em' },
   startBtn: { padding: '10px 24px', background: 'transparent', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 2, transition: 'all .2s' },

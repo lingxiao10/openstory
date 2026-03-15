@@ -18,7 +18,7 @@ export function Stats() {
 
   const load = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const res = await fetch('/api/stats/last7days', {
         headers: { Authorization: `Bearer ${token}` }
       });
