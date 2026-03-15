@@ -6,6 +6,7 @@ import { GameIndex, PublicStory } from '../types';
 import { queryWork } from '../api/queryWork';
 import { useI18n } from '../i18n';
 import { TranslationKey } from '../i18n/translations';
+import { useAudio } from '../components/AudioManager';
 
 export function Home() {
   const [games, setGames] = useState<GameIndex[]>([]);
@@ -14,6 +15,7 @@ export function Home() {
   const [filter, setFilter] = useState<'all' | 'mystery' | 'numeric'>('all');
   const { t, lang } = useI18n();
   const navigate = useNavigate();
+  const { playClick } = useAudio();
 
   useEffect(() => {
     Promise.all([
@@ -78,7 +80,7 @@ export function Home() {
 
         <button
           className="play-generate-btn"
-          onClick={() => navigate('/my-stories?quick=1')}
+          onClick={() => { playClick(); navigate('/my-stories?quick=1'); }}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 10,
             padding: '14px 36px', borderRadius: 14,

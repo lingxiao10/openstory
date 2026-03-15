@@ -87,7 +87,6 @@ export function StoryReader() {
             const isDone = completed.includes(ch.id);
             const prevDone = i === 0 || completed.includes(story.chapters[i - 1].id);
             const locked = !ch.is_generated || (!prevDone && !isDone);
-            const outline = (lang === 'en' && ch.outline_en) ? ch.outline_en : ch.outline_zh;
 
             return (
               <button
@@ -107,10 +106,20 @@ export function StoryReader() {
                   <div style={{ color: locked ? '#475569' : isDone ? '#86efac' : '#e2e8f0', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
                     {t('reader_chapter').replace('{n}', String(ch.chapter_num))}
                   </div>
-                  {outline && (
-                    <div style={{ color: '#64748b', fontSize: 12 }}>
-                      {outline.length > 40 ? outline.slice(0, 40) + '…' : outline}
-                    </div>
+                  {(() => {
+                    const outline = (lang === 'en' && ch.outline_en) ? ch.outline_en : ch.outline_zh;
+                    if (!outline) return null;
+                    return (
+                      <div style={{ color: '#64748b', fontSize: 12 }}>
+                        {outline.length > 30 ? outline.slice(0, 30) + '…' : outline}
+                      </div>
+                    );
+                  })()}
+                  {ch.content_json && (
+                    <div style={{ color: '#6366f1', fontSize: 11, marginTop: 4 }}>{t('reader_interactive')}</div>
+                  )}
+                  {isOwner && !ch.published && (
+                    <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>{t('reader_unpublished')}</div>
                   )}
                 </div>
                 <div style={{ fontSize: 18, flexShrink: 0, marginLeft: 12, color: '#ffffff' }}>

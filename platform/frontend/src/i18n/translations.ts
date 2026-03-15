@@ -101,7 +101,9 @@ export const translations = {
   game_restart:         { zh: '重新开始',          en: 'Restart' },
   game_darkMode:        { zh: '☾ 暗色调',          en: '☾ Dark' },
   game_lightMode:       { zh: '☀ 白色调',          en: '☀ Light' },
-  game_statZero:        { zh: '已降至 0',          en: 'dropped to 0' },
+  game_statZero:        { zh: '已降至  0',          en: 'dropped to 0' },
+  game_bgmOn:           { zh: '🔊 音乐',           en: '🔊 Music' },
+  game_bgmOff:          { zh: '🔇 音乐',           en: '🔇 Music' },
 
   // stream game
   stream_connecting:    { zh: '正在连接，生成故事大纲中…', en: 'Connecting, generating outline…' },
