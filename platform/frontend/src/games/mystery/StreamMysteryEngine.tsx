@@ -9,6 +9,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useI18n } from '../../i18n';
 import { BilingualText } from '../../i18n/translations';
+import { useAudio } from '../../components/AudioManager';
 
 interface Card {
   id: number;
@@ -69,6 +70,7 @@ type CardTone = 'dark' | 'light';
 
 export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, onBack }: Props) {
   const { t, tf } = useI18n();
+  const { playClick, toggleBgm, bgmEnabled, bgmVolume, setBgmVolume } = useAudio();
   const data = gameData.cards;
 
   const [index, setIndex] = useState(0);
@@ -80,6 +82,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   const [cardTone, setCardTone] = useState<CardTone>(
     () => (localStorage.getItem('card_tone') as CardTone) || 'dark'
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const toggleTone = () => {
     const next: CardTone = cardTone === 'dark' ? 'light' : 'dark';
@@ -130,15 +133,17 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = useCallback(() => {
+    playClick();
     if (index >= data.length - 1) {
       setPendingAdvance(true);
       return;
     }
     setIndex(i => i + 1);
-  }, [data.length, index]);
+  }, [data.length, index, playClick]);
 
   const choose = useCallback((opt: 'A' | 'B') => {
     if (phase !== 'playing' || !card || card.type !== 'choice' || !shuffledAB) return;
+    playClick();
     if (opt === shuffledAB.correct) {
       if (index >= data.length - 1) {
         // 下一张卡还没到，先标记等待
@@ -182,9 +187,26 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
         )}
 
         {phase !== 'victory' && (
-          <button onClick={toggleTone} style={{ ...S.backBtn, left: 'auto', right: 52, color: T.backBtnColor, fontSize: '0.75rem' }}>
-            {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
-          </button>
+          <div style={{ position: 'absolute', top: 12, right: 16, zIndex: 20 }}>
+            <button onClick={() => setSettingsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: T.backBtnColor, padding: '4px 6px' }}>⚙</button>
+            {settingsOpen && (
+              <div style={{ position: 'absolute', top: 32, right: 0, background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 6, padding: '12px 14px', minWidth: 160, boxShadow: T.cardShadow }} onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ color: T.textMain, fontSize: '0.75rem' }}>{t(bgmEnabled ? 'game_bgmOn' : 'game_bgmOff')}</span>
+                  <button onClick={toggleBgm} style={{ background: bgmEnabled ? T.actColor : T.dimColor, border: 'none', borderRadius: 10, width: 36, height: 20, cursor: 'pointer', position: 'relative' }}>
+                    <span style={{ position: 'absolute', top: 2, left: bgmEnabled ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s' }} />
+                  </button>
+                </div>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ color: T.textSub, fontSize: '0.65rem', marginBottom: 4 }}>{t('game_volume')}</div>
+                  <input type="range" min="0" max="1" step="0.05" value={bgmVolume} onChange={e => setBgmVolume(parseFloat(e.target.value))} style={{ width: '100%', accentColor: T.actColor }} />
+                </div>
+                <button onClick={toggleTone} style={{ background: 'none', border: `1px solid ${T.cardBorder}`, borderRadius: 4, color: T.textMain, fontSize: '0.7rem', padding: '4px 8px', cursor: 'pointer', width: '100%', fontFamily: 'inherit' }}>
+                  {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {phase !== 'victory' && (
@@ -354,8 +376,8 @@ const S: Record<string, React.CSSProperties> = {
   progress: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: '#ffffff0d', zIndex: 10 },
   progressBar: { height: '100%', background: 'linear-gradient(90deg,#8B6914,#C9A84C)', transition: 'width .4s ease' },
   waitBadge: { position: 'absolute', top: 54, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: '#C9A84C22', border: '1px solid #C9A84C55', borderRadius: 20, padding: '4px 14px', color: '#C9A84C', fontSize: '0.72rem', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' },
-  card: { position: 'relative', width: 'min(380px, 90vw)', minHeight: 300, borderRadius: 4, zIndex: 1, padding: 0 },
-  cardInner: { padding: '32px 28px 28px', margin: 8, height: 'calc(100% - 16px)', minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 },
+  card: { position: 'relative', width: 'min(380px, 90vw)', minHeight: 320, borderRadius: 4, zIndex: 1, padding: 0 },
+  cardInner: { padding: '32px 28px 28px', margin: 8, height: 'calc(100% - 16px)', minHeight: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 },
   cardCornerTL: { position: 'absolute', top: 10, left: 10, width: 18, height: 18, borderTop: '1.5px solid', borderLeft: '1.5px solid' },
   cardCornerBR: { position: 'absolute', bottom: 10, right: 10, width: 18, height: 18, borderBottom: '1.5px solid', borderRight: '1.5px solid' },
   actLabel: { fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 18, opacity: 0.85, fontFamily: "'Playfair Display', Georgia, serif" },
@@ -364,7 +386,7 @@ const S: Record<string, React.CSSProperties> = {
   choiceIcon: { fontSize: '1.8rem', marginBottom: 12, opacity: 0.6 },
   choiceQuestion: { fontSize: '0.95rem', lineHeight: 1.8, textAlign: 'center', marginBottom: 20, letterSpacing: '0.05em' },
   choiceRow: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%' },
-  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', textAlign: 'left', fontFamily: 'inherit', width: '100%', outline: 'none', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' },
+  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '15px 12px', textAlign: 'left', fontFamily: 'inherit', width: '100%', outline: 'none', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' },
   choiceLetter: { fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: '1rem', minWidth: 18, marginTop: 1 },
   choiceText: { fontSize: '0.88rem', lineHeight: 1.6, letterSpacing: '0.04em' },
   startBtn: { padding: '10px 24px', background: 'transparent', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 2, transition: 'all .2s' },

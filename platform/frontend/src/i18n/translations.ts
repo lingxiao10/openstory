@@ -104,6 +104,7 @@ export const translations = {
   game_statZero:        { zh: '已降至  0',          en: 'dropped to 0' },
   game_bgmOn:           { zh: '🔊 音乐',           en: '🔊 Music' },
   game_bgmOff:          { zh: '🔇 音乐',           en: '🔇 Music' },
+  game_volume:          { zh: '音量',               en: 'Volume' },
 
   // stream game
   stream_connecting:    { zh: '正在连接，生成故事大纲中…', en: 'Connecting, generating outline…' },

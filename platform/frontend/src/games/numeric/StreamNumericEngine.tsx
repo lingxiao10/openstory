@@ -7,6 +7,7 @@ console.log('[StreamNumericEngine] ✅ module loaded v3');
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useI18n } from '../../i18n';
 import { BilingualText } from '../../i18n/translations';
+import { useAudio } from '../../components/AudioManager';
 
 interface StatDef {
   name: BilingualText;
@@ -96,6 +97,7 @@ type CardTone = 'dark' | 'light';
 
 export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, onBack }: Props) {
   const { t, tf } = useI18n();
+  const { playClick, toggleBgm, bgmEnabled, bgmVolume, setBgmVolume } = useAudio();
   const [stats, setStats] = useState<Record<string, number>>(() => getInitialStats(gameData.statDefs || {}));
   const [items, setItems] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
@@ -110,6 +112,7 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
   const [cardTone, setCardTone] = useState<CardTone>(
     () => (localStorage.getItem('card_tone') as CardTone) || 'dark'
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const toggleTone = () => {
     const next: CardTone = cardTone === 'dark' ? 'light' : 'dark';
@@ -150,6 +153,7 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
   }, [data.length, waiting]);
 
   const applyChoice = (choice: StoryChoice) => {
+    playClick();
     const newStats = { ...stats };
     const combined: Record<string, number> = {};
     const changed = new Set<string>();
@@ -202,6 +206,7 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
   };
 
   const advance = () => {
+    playClick();
     const nextIndex = index + 1;
     if (data[nextIndex]?.type === 'end') { setWin(true); return; }
     if (nextIndex >= data.length) {
@@ -239,11 +244,28 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
         <div style={{ ...S.bgPattern, backgroundImage: T.bgPattern }} />
         <div style={{ ...S.bgVignette, background: T.bgVignette }} />
 
-        {/* Tone toggle */}
+        {/* Settings gear */}
         {!gameOver && !win && (
-          <button onClick={toggleTone} style={{ ...S.backBtn, left: 'auto', right: 16, color: T.backBtnColor, fontSize: '0.75rem' }}>
-            {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
-          </button>
+          <div style={{ position: 'absolute', top: 12, right: 16, zIndex: 20 }}>
+            <button onClick={() => setSettingsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: T.backBtnColor, padding: '4px 6px' }}>⚙</button>
+            {settingsOpen && (
+              <div style={{ position: 'absolute', top: 32, right: 0, background: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: 6, padding: '12px 14px', minWidth: 160, boxShadow: T.cardShadow }} onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ color: T.textMain, fontSize: '0.75rem' }}>{t(bgmEnabled ? 'game_bgmOn' : 'game_bgmOff')}</span>
+                  <button onClick={toggleBgm} style={{ background: bgmEnabled ? T.actColor : T.dimColor, border: 'none', borderRadius: 10, width: 36, height: 20, cursor: 'pointer', position: 'relative' }}>
+                    <span style={{ position: 'absolute', top: 2, left: bgmEnabled ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s' }} />
+                  </button>
+                </div>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ color: T.textSub, fontSize: '0.65rem', marginBottom: 4 }}>{t('game_volume')}</div>
+                  <input type="range" min="0" max="1" step="0.05" value={bgmVolume} onChange={e => setBgmVolume(parseFloat(e.target.value))} style={{ width: '100%', accentColor: T.actColor }} />
+                </div>
+                <button onClick={toggleTone} style={{ background: 'none', border: `1px solid ${T.cardBorder}`, borderRadius: 4, color: T.textMain, fontSize: '0.7rem', padding: '4px 8px', cursor: 'pointer', width: '100%', fontFamily: 'inherit' }}>
+                  {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Back button */}
@@ -452,8 +474,8 @@ const S: Record<string, React.CSSProperties> = {
   backBtn: { position: 'absolute', top: 16, left: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', fontFamily: 'inherit', padding: '4px 8px' },
   progress: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: '#ffffff0d', zIndex: 10 },
   progressBar: { height: '100%', background: 'linear-gradient(90deg, #8B6914, #C9A84C)', transition: 'width .4s ease' },
-  card: { position: 'relative', width: 'min(380px, 90vw)', minHeight: 300, borderRadius: 4, zIndex: 1, padding: 0 },
-  cardInner: { padding: '32px 28px 28px', margin: 8, minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 },
+  card: { position: 'relative', width: 'min(380px, 90vw)', minHeight: 320, borderRadius: 4, zIndex: 1, padding: 0 },
+  cardInner: { padding: '32px 28px 28px', margin: 8, minHeight: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 },
   cardCornerTL: { position: 'absolute', top: 10, left: 10, width: 18, height: 18, borderTop: '1.5px solid', borderLeft: '1.5px solid' },
   cardCornerBR: { position: 'absolute', bottom: 10, right: 10, width: 18, height: 18, borderBottom: '1.5px solid', borderRight: '1.5px solid' },
   actLabel: { fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 18, opacity: 0.85, fontFamily: "'Playfair Display', Georgia, serif" },
@@ -462,7 +484,7 @@ const S: Record<string, React.CSSProperties> = {
   choiceIcon: { fontSize: '1.8rem', marginBottom: 12, opacity: 0.6 },
   choiceQuestion: { fontSize: '0.95rem', lineHeight: 1.8, textAlign: 'center', marginBottom: 20, letterSpacing: '0.05em' },
   choiceRow: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%' },
-  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', fontFamily: 'inherit', width: '100%', outline: 'none' },
+  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '15px 12px', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', fontFamily: 'inherit', width: '100%', outline: 'none' },
   choiceLetter: { fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: '1rem', minWidth: 18, marginTop: 1 },
   choiceText: { fontSize: '0.88rem', lineHeight: 1.6, letterSpacing: '0.04em' },
   startBtn: { padding: '10px 24px', background: 'transparent', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 2, transition: 'all .2s' },
