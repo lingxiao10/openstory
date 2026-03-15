@@ -6,6 +6,7 @@ interface AudioContextType {
   bgmEnabled: boolean;
   bgmVolume: number;
   setBgmVolume: (v: number) => void;
+  setBgmActive: (active: boolean) => void;
 }
 
 const AudioContext = createContext<AudioContextType>({
@@ -14,12 +15,14 @@ const AudioContext = createContext<AudioContextType>({
   bgmEnabled: true,
   bgmVolume: 0.3,
   setBgmVolume: () => {},
+  setBgmActive: () => {},
 });
 
 export const useAudio = () => useContext(AudioContext);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [bgmEnabled, setBgmEnabled] = useState(true);
+  const [bgmActive, setBgmActive] = useState(false);
   const [bgmVolume, setBgmVolumeState] = useState(() => {
     const saved = localStorage.getItem('bgm_volume');
     return saved ? parseFloat(saved) : 0.3;
@@ -48,12 +51,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [bgmVolume]);
 
   useEffect(() => {
-    if (unlocked && bgmEnabled && bgmRef.current) {
+    if (unlocked && bgmEnabled && bgmActive && bgmRef.current) {
       bgmRef.current.play().catch(() => {});
     } else if (bgmRef.current) {
       bgmRef.current.pause();
     }
-  }, [bgmEnabled, unlocked]);
+  }, [bgmEnabled, unlocked, bgmActive]);
 
   const setBgmVolume = (v: number) => {
     const clamped = Math.max(0, Math.min(1, v));
@@ -72,7 +75,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const toggleBgm = () => setBgmEnabled(prev => !prev);
 
   return (
-    <AudioContext.Provider value={{ playClick, toggleBgm, bgmEnabled, bgmVolume, setBgmVolume }}>
+    <AudioContext.Provider value={{ playClick, toggleBgm, bgmEnabled, bgmVolume, setBgmVolume, setBgmActive }}>
       {children}
     </AudioContext.Provider>
   );

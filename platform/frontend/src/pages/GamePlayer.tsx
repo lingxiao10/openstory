@@ -6,6 +6,7 @@ import { queryWork } from '../api/queryWork';
 import { MysteryEngine } from '../games/mystery/MysteryEngine';
 import { NumericEngine } from '../games/numeric/NumericEngine';
 import { useI18n } from '../i18n';
+import { useAudio } from '../components/AudioManager';
 
 export function GamePlayer() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,12 @@ export function GamePlayer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { t } = useI18n();
+  const { setBgmActive } = useAudio();
+
+  useEffect(() => {
+    setBgmActive(true);
+    return () => setBgmActive(false);
+  }, [setBgmActive]);
 
   useEffect(() => {
     if (!id) return;

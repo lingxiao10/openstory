@@ -214,7 +214,7 @@ interface Story {
 
 
 export function MyStories() {
-  const { token, isLoggedIn } = useContext(AuthContext);
+  const { token, isLoggedIn, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const { t, lang } = useI18n();
 
@@ -261,6 +261,17 @@ export function MyStories() {
           {stories.map(story => (
             <StoryCard key={story.id} story={story} token={token} onRefresh={load} />
           ))}
+        </div>
+      )}
+
+      {user?.isAdmin && (
+        <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid #1e293b', display: 'flex', gap: 12 }}>
+          <a href="/admin" style={{ background: '#f59e0b22', color: '#f59e0b', border: '1px solid #f59e0b44', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            {t('nav_admin')}
+          </a>
+          <a href="/stats" style={{ background: '#22c55e22', color: '#22c55e', border: '1px solid #22c55e44', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            {t('nav_stats')}
+          </a>
         </div>
       )}
     </Layout>

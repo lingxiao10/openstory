@@ -129,6 +129,11 @@
   - `NumericEngine.tsx` 和 `StreamNumericEngine.tsx` 均已实现
 - **无进度条**：底部进度条已移除，不再显示章节进度
 
+## UI 布局调整（2026-03-15）
+- Header 已移除：音乐按钮、管理/数据统计链接
+- 管理/数据统计按钮移至 MyStories 页面底部（分割线下方），仅 isAdmin 可见
+- AudioManager 仍存在但 Header 不再引用它（游戏内部可能仍用）
+
 ## PM2 服务管理
 - 配置文件：根目录 `ecosystem.config.js`
 - Windows 需用 `script: 'C:\\Windows\\System32\\cmd.exe', args: '/c npm run dev', interpreter: 'none'`

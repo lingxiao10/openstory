@@ -26,6 +26,7 @@ import { AuthContext } from '../store/authStore';
 import { StreamMysteryEngine } from '../games/mystery/StreamMysteryEngine';
 import { StreamNumericEngine } from '../games/numeric/StreamNumericEngine';
 import { useI18n } from '../i18n';
+import { useAudio } from '../components/AudioManager';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,12 @@ export function StreamGamePage() {
   const { token } = useContext(AuthContext);
   const startChapter = parseInt(new URLSearchParams(window.location.search).get('chapter') ?? '1') || 1;
   const { t, lang } = useI18n();
+  const { setBgmActive } = useAudio();
+
+  useEffect(() => {
+    setBgmActive(true);
+    return () => setBgmActive(false);
+  }, [setBgmActive]);
 
   const [phase, setPhase] = useState<PagePhase>('connecting');
   const [chapters, setChapters] = useState<ChapterState[]>([]);
