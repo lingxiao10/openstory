@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS stories (
   title_zh VARCHAR(200) NOT NULL,
   title_en VARCHAR(200) DEFAULT '',
   genre ENUM('mystery','numeric') NOT NULL,
+  player_name VARCHAR(100) NOT NULL DEFAULT '',
   status ENUM('draft','generating','published') DEFAULT 'draft',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)

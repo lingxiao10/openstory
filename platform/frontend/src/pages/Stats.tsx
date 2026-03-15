@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useI18n } from '../i18n';
 
 interface DayStat {
   date: string;
@@ -9,6 +10,7 @@ interface DayStat {
 export function Stats() {
   const [stats, setStats] = useState<DayStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => {
     load();
@@ -35,17 +37,17 @@ export function Stats() {
     }
   };
 
-  if (loading) return <div style={S.container}>加载中...</div>;
+  if (loading) return <div style={S.container}>{t('common_loading')}</div>;
 
   return (
     <div style={S.container}>
-      <h1 style={S.title}>最近7天统计</h1>
+      <h1 style={S.title}>{t('stats_title')}</h1>
       <table style={S.table}>
         <thead>
           <tr>
-            <th style={S.th}>日期</th>
-            <th style={S.th}>新用户</th>
-            <th style={S.th}>章节阅读数</th>
+            <th style={S.th}>{t('stats_date')}</th>
+            <th style={S.th}>{t('stats_newUsers')}</th>
+            <th style={S.th}>{t('stats_reads')}</th>
           </tr>
         </thead>
         <tbody>

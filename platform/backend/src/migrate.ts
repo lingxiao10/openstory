@@ -18,6 +18,8 @@ const migrations: string[] = [
   `ALTER TABLE chapters ADD COLUMN published_at DATETIME NULL`,
   `ALTER TABLE stories ADD COLUMN background_zh TEXT`,
   `ALTER TABLE stories ADD COLUMN background_en TEXT`,
+  `ALTER TABLE stories ADD COLUMN summary_zh VARCHAR(200)`,
+  `ALTER TABLE stories ADD COLUMN summary_en VARCHAR(200)`,
   `ALTER TABLE users ADD COLUMN daily_quota INT NULL DEFAULT NULL`,
   `CREATE TABLE IF NOT EXISTS generation_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -128,6 +128,13 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
+  // 防止 SSE 重连导致 cards 重置后 index 越界 → 空白屏
+  useEffect(() => {
+    if (data.length > 0 && index >= data.length) {
+      setIndex(data.length - 1);
+    }
+  }, [data.length, index]);
+
   // Auto-resume when new cards arrive while waiting
   const prevDataLenRef = useRef(data.length);
   useEffect(() => {
@@ -360,13 +367,12 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, on
                 <div style={{ ...S.storyText, color: T.textMain, whiteSpace: 'pre-line', lineHeight: 2 }}>
                   {gameData.winText ? tf(gameData.winText) : t('game_win')}
                 </div>
-                <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>{t('game_storyComplete')}</div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {onVictory && (
-                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>{t('game_nextChapter')}</button>
-                  )}
-                  <button style={{ ...S.startBtn, border: `1px solid ${T.dimColor}`, color: T.dimColor }} onClick={restart}>{t('game_playAgain')}</button>
+                <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>
+                  {t('game_chapterComplete')}
                 </div>
+                {onVictory && (
+                  <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor, marginTop: 8 }} onClick={onVictory}>{t('game_nextChapter')}</button>
+                )}
               </div>
               <div style={{ ...S.cardCornerTL, borderColor: T.cornerColor }} />
               <div style={{ ...S.cardCornerBR, borderColor: T.cornerColor }} />

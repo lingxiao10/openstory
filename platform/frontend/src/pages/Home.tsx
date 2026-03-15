@@ -93,6 +93,22 @@ export function Home() {
           <span style={{ fontSize: 18 }}>⚡</span>
           {lang === 'zh' ? '边玩边生成' : 'Play While Generating'}
         </button>
+        <div className="mobile-my-stories-link" style={{ display: 'none', marginTop: 14 }}>
+          <Link
+            to="/my-stories"
+            style={{
+              color: '#94a3b8', fontSize: 14, textDecoration: 'none',
+              borderBottom: '1px solid #334155', paddingBottom: 1,
+            }}
+          >
+            {lang === 'zh' ? '我的小说 →' : 'My Stories →'}
+          </Link>
+        </div>
+        <style>{`
+          @media (max-width: 640px) {
+            .mobile-my-stories-link { display: block !important; }
+          }
+        `}</style>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
@@ -120,20 +136,34 @@ export function Home() {
   );
 }
 
+const hasChinese = (s: string) => /[\u4e00-\u9fff]/.test(s);
+
 const typeColors: Record<string, string> = { mystery: '#8b5cf6', numeric: '#06b6d4' };
 const typeIcons: Record<string, string> = { mystery: '🔍', numeric: '⚡' };
 
 function StoryCard({ story }: { story: PublicStory }) {
   const { t, lang } = useI18n();
-  const title = lang === 'en' && story.title_en ? story.title_en : story.title_zh;
-  const bg = lang === 'en' && story.background_en ? story.background_en : story.background_zh;
   const color = typeColors[story.genre] || '#6366f1';
   const icon = typeIcons[story.genre] || '📖';
+
+  // Title: in EN mode, use title_en only if it exists and is not Chinese
+  const hasEnTitle = !!(story.title_en && !hasChinese(story.title_en) && story.title_en !== story.title_zh);
+  const title = lang === 'en'
+    ? (hasEnTitle ? story.title_en : t('common_titleGenerating'))
+    : story.title_zh;
+
+  // Summary: in EN mode, use summary_en or non-Chinese background_en
+  const enSummary = story.summary_en
+    || (!hasChinese(story.background_en ?? '') && story.background_en ? story.background_en : null);
+  const hasEnSummary = !!enSummary;
+  const summary = lang === 'en'
+    ? enSummary
+    : (story.summary_zh || story.background_zh || null);
 
   return (
     <div style={{ background: '#1e293b', borderRadius: 16, overflow: 'hidden', border: '1px solid #334155', display: 'flex', flexDirection: 'column' }}>
       <div style={{ background: `linear-gradient(135deg, ${color}22, ${color}44)`, padding: '20px 24px 16px', borderBottom: '1px solid #334155' }}>
-        <h3 style={{ color: '#e2e8f0', fontSize: 18, fontWeight: 700, margin: '0 0 10px' }}>{title}</h3>
+        <h3 style={{ color: lang === 'en' && !hasEnTitle ? '#475569' : '#e2e8f0', fontSize: 18, fontWeight: 700, margin: '0 0 10px', fontStyle: lang === 'en' && !hasEnTitle ? 'italic' : 'normal' }}>{title}</h3>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 10px', borderRadius: 20, background: `${color}33`, color, fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
             {icon} {t(`home_${story.genre}` as TranslationKey)}
@@ -148,15 +178,16 @@ function StoryCard({ story }: { story: PublicStory }) {
       </div>
       <div style={{ padding: '16px 24px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
         <p style={{
-          color: '#94a3b8', fontSize: 13, lineHeight: 1.7, margin: '0 0 16px',
-          height: '66px',
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: 'vertical',
-        } as React.CSSProperties}>{bg}</p>
+          color: summary ? '#94a3b8' : '#475569',
+          fontStyle: summary ? 'normal' : 'italic',
+          fontSize: 13, lineHeight: 1.7, margin: '0 0 16px',
+          height: '44px', overflow: 'hidden',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        } as React.CSSProperties}>
+          {summary ?? (lang === 'en' ? t('common_descGenerating') : t('common_noDescription'))}
+        </p>
         <Link
-          to={`/stream-game/${story.id}`}
+          to={`/story/${story.id}`}
           style={{ display: 'block', textAlign: 'center', background: color, color: '#fff', textDecoration: 'none', padding: '10px', borderRadius: 10, fontWeight: 700, fontSize: 14, marginTop: 'auto' }}
         >
           {t('home_play')} →

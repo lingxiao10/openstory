@@ -19,6 +19,8 @@ export interface PublicStory {
   title_en: string;
   background_zh: string;
   background_en: string;
+  summary_zh?: string;
+  summary_en?: string;
   genre: 'mystery' | 'numeric';
   published_count: number;
 }

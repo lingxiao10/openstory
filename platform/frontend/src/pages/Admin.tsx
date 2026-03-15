@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { AuthContext } from '../store/authStore';
 import { queryWork } from '../api/queryWork';
+import { useI18n } from '../i18n';
 
 interface UserRow {
   id: string;
@@ -18,6 +19,7 @@ interface UserRow {
 export function Admin() {
   const { user, token, isLoggedIn } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [q, setQ] = useState('');
   const [results, setResults] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export function Admin() {
     try {
       const data = await queryWork<UserRow[]>(`/api/admin/users?q=${encodeURIComponent(q)}`, { token });
       setResults(data);
-      if (data.length === 0) setErr('未找到用户');
+      if (data.length === 0) setErr(t('admin_notFound'));
     } catch (e: any) { setErr(e.message); }
     finally { setLoading(false); }
   };
@@ -55,7 +57,7 @@ export function Admin() {
     try {
       const val = editVal.trim() === '' ? null : parseInt(editVal);
       if (val !== null && (isNaN(val) || val < 0)) {
-        alert('请输入非负整数，或留空表示使用系统默认值');
+        alert(t('admin_invalidQuota'));
         return;
       }
       await queryWork(`/api/admin/users/${id}/quota`, {
@@ -69,20 +71,27 @@ export function Admin() {
     finally { setSaving(false); }
   };
 
+  const cols = [
+    t('admin_colUsername'), t('admin_colEmail'), t('admin_colLang'), t('admin_colId'),
+    t('admin_colUsedToday'), t('admin_colEffLimit'), t('admin_colCustomLimit'), t('admin_colAction'),
+  ];
+
   return (
     <Layout>
-      <h2 style={{ color: '#e2e8f0', marginBottom: 8 }}>⚙ 管理后台</h2>
+      <h2 style={{ color: '#e2e8f0', marginBottom: 8 }}>{t('admin_title')}</h2>
 
       {sysConfig && (
         <div style={{ background: '#1e293b', borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#94a3b8', border: '1px solid #334155' }}>
-          每日生成限额功能：
+          {t('admin_quotaLabel')}
           <span style={{ color: sysConfig.daily_gen_limit_enabled ? '#22c55e' : '#ef4444', fontWeight: 700, marginLeft: 6 }}>
-            {sysConfig.daily_gen_limit_enabled ? '已开启' : '已关闭'}
+            {sysConfig.daily_gen_limit_enabled ? t('admin_enabled') : t('admin_disabled')}
           </span>
           {sysConfig.daily_gen_limit_enabled && (
-            <span style={{ marginLeft: 12 }}>系统默认每日上限：<b style={{ color: '#e2e8f0' }}>{sysConfig.daily_gen_limit}</b> 次</span>
+            <span style={{ marginLeft: 12 }}>
+              {t('admin_sysLimit')}<b style={{ color: '#e2e8f0' }}>{sysConfig.daily_gen_limit}</b>{t('admin_sysLimitUnit')}
+            </span>
           )}
-          <span style={{ marginLeft: 12, color: '#64748b' }}>（修改需在 secret_json.json 中配置 daily_gen_limit_enabled / daily_gen_limit）</span>
+          <span style={{ marginLeft: 12, color: '#64748b' }}>{t('admin_configNote')}</span>
         </div>
       )}
 
@@ -90,11 +99,11 @@ export function Admin() {
         <input
           value={q} onChange={e => setQ(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && search()}
-          placeholder="输入用户 ID、用户名或邮箱"
+          placeholder={t('admin_searchPlaceholder')}
           style={inputStyle}
         />
         <button onClick={search} disabled={loading} style={btnStyle}>
-          {loading ? '搜索中...' : '搜索'}
+          {loading ? t('admin_searching') : t('admin_search')}
         </button>
       </div>
 
@@ -105,7 +114,7 @@ export function Admin() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ color: '#64748b', borderBottom: '1px solid #334155' }}>
-                {['用户名', '邮箱', '语言', 'ID', '今日已生成', '有效上限', '自定义上限', '操作'].map(h => (
+                {cols.map(h => (
                   <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
@@ -129,26 +138,26 @@ export function Admin() {
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <input
                           value={editVal} onChange={e => setEditVal(e.target.value)}
-                          placeholder={`默认${sysConfig?.daily_gen_limit ?? 10}`}
+                          placeholder={`${sysConfig?.daily_gen_limit ?? 10}`}
                           style={{ ...inputStyle, width: 80, padding: '4px 8px', fontSize: 12 }}
                         />
                         <button onClick={() => saveQuota(row.id)} disabled={saving} style={{ ...btnStyle, padding: '4px 10px', fontSize: 12 }}>
-                          {saving ? '...' : '保存'}
+                          {saving ? '...' : t('admin_save')}
                         </button>
                         <button onClick={() => setEditingId(null)} style={{ ...btnStyle, padding: '4px 10px', fontSize: 12, background: '#475569' }}>
-                          取消
+                          {t('admin_cancel')}
                         </button>
                       </div>
                     ) : (
                       <span style={{ color: row.daily_quota == null ? '#475569' : '#a5b4fc' }}>
-                        {row.daily_quota == null ? '（默认）' : row.daily_quota}
+                        {row.daily_quota == null ? t('admin_defaultQuota') : row.daily_quota}
                       </span>
                     )}
                   </td>
                   <td style={td}>
                     {editingId !== row.id && (
                       <button onClick={() => startEdit(row)} style={{ ...btnStyle, padding: '4px 12px', fontSize: 12 }}>
-                        设置额度
+                        {t('admin_setQuota')}
                       </button>
                     )}
                   </td>

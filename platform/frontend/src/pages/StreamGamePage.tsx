@@ -32,6 +32,7 @@ import { useI18n } from '../i18n';
 interface ChapterState {
   num: number;
   outlineZh: string;
+  outlineEn: string;
   cards: any[];
   numericMeta: any | null;
   isDone: boolean;
@@ -47,7 +48,8 @@ export function StreamGamePage() {
   const { storyId } = useParams<{ storyId: string }>();
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
-  const { t } = useI18n();
+  const startChapter = parseInt(new URLSearchParams(window.location.search).get('chapter') ?? '1') || 1;
+  const { t, lang } = useI18n();
 
   const [phase, setPhase] = useState<PagePhase>('connecting');
   const [chapters, setChapters] = useState<ChapterState[]>([]);
@@ -62,6 +64,7 @@ export function StreamGamePage() {
   // Keep ref in sync with state
   useEffect(() => { chaptersRef.current = chapters; }, [chapters]);
 
+
   // ── Initialize session ──────────────────────────────────────────────────────
 
   const initializeSession = useCallback(async () => {
@@ -73,7 +76,9 @@ export function StreamGamePage() {
       const statusData = await statusRes.json();
 
       if (statusData.found) {
-        return true; // Session exists
+        // If all chapters are already generated, mark generation as done immediately
+        if (statusData.done) setIsGenerating(false);
+        return true;
       }
 
       // Session doesn't exist, create it
@@ -86,6 +91,11 @@ export function StreamGamePage() {
         const err = await resumeRes.json();
         throw new Error(err.error || t('stream_sessionFailed'));
       }
+
+      // After resume, check if all chapters were already generated
+      const statusRes2 = await fetch(`/api/stream-game/${storyId}/status?token=${encodeURIComponent(token)}`);
+      const statusData2 = await statusRes2.json();
+      if (statusData2.done) setIsGenerating(false);
 
       return true;
     } catch (err: any) {
@@ -109,9 +119,15 @@ export function StreamGamePage() {
       const { chapters: outlineList } = JSON.parse(e.data) as {
         chapters: Array<{ num: number; zh: string; en: string }>;
       };
+      // SSE 重连时会重放 outline，如果已有卡片数据则不重置（防止清空已有状态）
+      const alreadyHasData = chaptersRef.current.some(c => c.cards.length > 0);
+      if (alreadyHasData) {
+          return;
+      }
       const initialChapters: ChapterState[] = outlineList.map(o => ({
         num: o.num,
         outlineZh: o.zh,
+        outlineEn: o.en || '',
         cards: [],
         numericMeta: null,
         isDone: false,
@@ -120,6 +136,8 @@ export function StreamGamePage() {
       }));
       setChapters(initialChapters);
       chaptersRef.current = initialChapters;
+      const targetIdx = Math.max(0, outlineList.findIndex(o => o.num === startChapter));
+      setCurrentChapterIdx(targetIdx);
       setPhase('playing');
     });
 
@@ -135,9 +153,12 @@ export function StreamGamePage() {
     sse.addEventListener('node', (e) => {
       const { chapter, node } = JSON.parse(e.data) as { chapter: number; node: any };
       if (chaptersRef.current.length === 0) return; // outline not yet received
-      setChapters(prev => prev.map(c =>
-        c.num === chapter ? { ...c, cards: [...c.cards, node] } : c
-      ));
+      setChapters(prev => prev.map(c => {
+        if (c.num !== chapter) return c;
+        // 重连重放时跳过已有的节点（按 id 去重）
+        if (c.cards.some(card => card.id === node.id)) return c;
+        return { ...c, cards: [...c.cards, node] };
+      }));
     });
 
     sse.addEventListener('chapter_done', (e) => {
@@ -194,13 +215,9 @@ export function StreamGamePage() {
       setPhase('all_done');
       return;
     }
-    // Show transition screen briefly, then jump to next chapter
-    setPhase('transition');
-    setTimeout(() => {
-      setCurrentChapterIdx(nextIdx);
-      setPhase('playing');
-    }, 2200);
-  }, [currentChapterIdx, chapters.length]);
+    const nextChapterNum = chapters[nextIdx].num;
+    window.location.href = `/stream-game/${storyId}?chapter=${nextChapterNum}`;
+  }, [currentChapterIdx, chapters, storyId]);
 
   const handleRetry = useCallback(async (chapterNum: number) => {
     if (!storyId || !token) return;
@@ -239,7 +256,7 @@ export function StreamGamePage() {
 
   if (phase === 'transition' && currentChapter) {
     const next = chapters[currentChapterIdx + 1];
-    return <ChapterTransitionScreen chapterNum={(next?.num ?? currentChapterIdx + 2)} outlineZh={next?.outlineZh ?? ''} />;
+    return <ChapterTransitionScreen chapterNum={(next?.num ?? currentChapterIdx + 2)} outlineZh={next?.outlineZh ?? ''} outlineEn={next?.outlineEn ?? ''} />;
   }
 
   if (phase === 'all_done') {
@@ -266,7 +283,7 @@ export function StreamGamePage() {
     return (
       <LoadingScreen
         message={t('stream_chapterGenerating').replace('{n}', String(currentChapter.num))}
-        subMessage={currentChapter.outlineZh}
+        subMessage={lang === 'en' ? (currentChapter.outlineEn || currentChapter.outlineZh) : currentChapter.outlineZh}
         onBack={() => navigate('/my-stories')}
       />
     );
@@ -342,17 +359,18 @@ function ErrorScreen({ message, onBack, onRetry }: { message: string; onBack: ()
   );
 }
 
-function ChapterTransitionScreen({ chapterNum, outlineZh }: { chapterNum: number; outlineZh: string }) {
-  const { t } = useI18n();
+function ChapterTransitionScreen({ chapterNum, outlineZh, outlineEn }: { chapterNum: number; outlineZh: string; outlineEn: string }) {
+  const { t, lang } = useI18n();
+  const outline = lang === 'en' ? (outlineEn || outlineZh) : outlineZh;
   return (
     <div style={{ ...SS.root, background: '#050810' }}>
       <div style={{ color: '#C9A84C55', fontSize: '0.65rem', letterSpacing: '0.3em', marginBottom: 16 }}>{t('stream_chapterLabel')}</div>
       <div style={{ color: '#C9A84C', fontSize: '2rem', fontFamily: 'Georgia, serif', marginBottom: 20 }}>
         {t('stream_chapterTitle').replace('{n}', String(chapterNum))}
       </div>
-      {outlineZh && (
+      {outline && (
         <div style={{ color: '#E8D5B060', fontSize: '0.85rem', lineHeight: 1.8, maxWidth: 300, textAlign: 'center' }}>
-          {outlineZh.slice(0, 60)}…
+          {outline.slice(0, 60)}…
         </div>
       )}
       <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>

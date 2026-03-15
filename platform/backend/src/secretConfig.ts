@@ -13,6 +13,7 @@ interface SecretJson {
   admin_email?: string;
   admin_emails?: string[];
   admin_usernames?: string[];
+  prompt_log_enabled?: boolean;
 }
 
 function loadSecret(): SecretJson {

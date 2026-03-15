@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { config } from './config';
 
 const logsDir = path.join(__dirname, '../../../logs');
 const mainLog = path.join(logsDir, 'generate.log');
@@ -28,3 +29,45 @@ export function createStreamLogger(tag: string) {
     file,
   };
 }
+
+// Prompt 文件日志（统一管理读写，受 config.promptLogEnabled 控制）
+const promptLogsDir = path.join(__dirname, '../../logs');
+
+export const promptLogger = {
+  /** 写入 prompt 到独立文件，返回文件路径（未写入时返回 null） */
+  write(genre: string, chapterNum: number, content: string): string | null {
+    if (!config.promptLogEnabled) return null;
+    try {
+      if (!fs.existsSync(promptLogsDir)) fs.mkdirSync(promptLogsDir, { recursive: true });
+      const file = path.join(promptLogsDir, `prompt_${genre}_ch${chapterNum}_${Date.now()}.txt`);
+      fs.writeFileSync(file, content, 'utf-8');
+      return file;
+    } catch (e) {
+      logger.error(`[PromptLogger] write failed: ${e}`);
+      return null;
+    }
+  },
+
+  /** 读取指定 prompt 文件内容 */
+  read(filePath: string): string | null {
+    if (!config.promptLogEnabled) return null;
+    try {
+      return fs.readFileSync(filePath, 'utf-8');
+    } catch (e) {
+      logger.error(`[PromptLogger] read failed: ${e}`);
+      return null;
+    }
+  },
+
+  /** 列出所有 prompt 日志文件路径 */
+  list(): string[] {
+    try {
+      if (!fs.existsSync(promptLogsDir)) return [];
+      return fs.readdirSync(promptLogsDir)
+        .filter(f => f.startsWith('prompt_'))
+        .map(f => path.join(promptLogsDir, f));
+    } catch {
+      return [];
+    }
+  },
+};

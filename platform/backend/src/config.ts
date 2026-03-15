@@ -35,4 +35,5 @@ export const config = {
   dailyGenLimit: secret.daily_gen_limit ?? 10,
   adminEmails: secret.admin_emails || [],
   adminUsernames: secret.admin_usernames || [],
+  promptLogEnabled: secret.prompt_log_enabled ?? true,
 };

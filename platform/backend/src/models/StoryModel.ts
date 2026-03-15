@@ -26,6 +26,26 @@ export class StoryModel {
     await pool.execute('UPDATE stories SET status = ? WHERE id = ?', [status, id]);
   }
 
+  static async updateMeta(id: string, titleEn: string, summaryZh: string, summaryEn: string = ''): Promise<void> {
+    await pool.execute(
+      'UPDATE stories SET title_en = ?, summary_zh = ?, summary_en = ? WHERE id = ?',
+      [titleEn, summaryZh, summaryEn, id]
+    );
+  }
+
+  // Stories that have published chapters but are missing title_en or summary_en
+  static async getPublicStoriesNeedingMeta(): Promise<any[]> {
+    const [rows] = await pool.execute<any[]>(`
+      SELECT DISTINCT s.id, s.title_zh, s.background_zh, s.ai_model
+      FROM stories s
+      JOIN chapters c ON c.story_id = s.id AND c.published = 1
+      WHERE (s.title_en IS NULL OR s.title_en = '' OR s.title_en = s.title_zh
+          OR s.summary_en IS NULL OR s.summary_en = '')
+      LIMIT 20
+    `);
+    return rows;
+  }
+
   // Get all stories that have at least 1 published chapter (for public listing)
   static async getPublicStories(): Promise<any[]> {
     const [rows] = await pool.execute<any[]>(`

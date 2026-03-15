@@ -20,6 +20,7 @@ export interface Story {
   created_at: Date;
   player_name?: string;
   ai_model?: string;
+  summary_zh?: string;
 }
 
 export interface Chapter {

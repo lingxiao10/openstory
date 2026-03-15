@@ -92,11 +92,12 @@ export const translations = {
   game_generatingNext:  { zh: '⧗ 正在生成下一幕…',  en: '⧗ Generating next scene…' },
   game_generatingSegment: { zh: '⧗ 正在生成下一段…', en: '⧗ Generating next segment…' },
   game_storyComplete:   { zh: '✦ 故事完结 ✦',      en: '✦ Story Complete ✦' },
+  game_chapterComplete: { zh: '✦ 本章完结 ✦',      en: '✦ Chapter Complete ✦' },
   game_wrongJudgment:   { zh: '判断有误',          en: 'Wrong Judgment' },
   game_hint:            { zh: '提示：',            en: 'Hint: ' },
   game_backTen:         { zh: '倒退十张，重新审视', en: 'Go back 10 cards' },
   game_cluesBroken:     { zh: '线索断裂',          en: 'Clues Lost' },
-  game_allChancesLost:  { zh: '三次机会均已耗尽。<br />真凶已经将证据销毁干净。<br />这个案子，需要从头再来。', en: 'All three chances lost.<br />The culprit destroyed all evidence.<br />This case needs to start over.' },
+  game_allChancesLost:  { zh: '三次机会均已耗尽。<br />你失败了。<br />这个章节，需要从头再来。', en: 'All three chances lost.<br />You have failed.<br />Start this chapter over.' },
   game_restart:         { zh: '重新开始',          en: 'Restart' },
   game_darkMode:        { zh: '☾ 暗色调',          en: '☾ Dark' },
   game_lightMode:       { zh: '☀ 白色调',          en: '☀ Light' },
@@ -121,9 +122,52 @@ export const translations = {
   // errors
   err_PREV_CHAPTER_NOT_PUBLISHED: { zh: '请先发布上一章', en: 'Previous chapter must be published first' },
 
+  // admin / nav extras
+  nav_admin: { zh: '⚙ 后台', en: '⚙ Admin' },
+  nav_stats: { zh: '📊 统计', en: '📊 Stats' },
+
+  // quick create errors
+  quick_fieldRequired: { zh: '标题、背景和玩家角色名不能为空', en: 'Title, background and player name are required' },
+  quick_createFailed:  { zh: '创建失败', en: 'Failed to create' },
+
+  // admin page
+  admin_title:          { zh: '⚙ 管理后台',           en: '⚙ Admin Panel' },
+  admin_quotaLabel:     { zh: '每日生成限额功能：',     en: 'Daily generation quota: ' },
+  admin_enabled:        { zh: '已开启',                 en: 'Enabled' },
+  admin_disabled:       { zh: '已关闭',                 en: 'Disabled' },
+  admin_sysLimit:       { zh: '系统默认每日上限：',     en: 'System default daily limit: ' },
+  admin_sysLimitUnit:   { zh: '次',                     en: '' },
+  admin_configNote:     { zh: '（修改需在 secret_json.json 中配置 daily_gen_limit_enabled / daily_gen_limit）', en: '(Edit secret_json.json to change daily_gen_limit_enabled / daily_gen_limit)' },
+  admin_searchPlaceholder: { zh: '输入用户 ID、用户名或邮箱', en: 'Enter user ID, username or email' },
+  admin_searching:      { zh: '搜索中...', en: 'Searching...' },
+  admin_search:         { zh: '搜索',      en: 'Search' },
+  admin_notFound:       { zh: '未找到用户', en: 'No users found' },
+  admin_invalidQuota:   { zh: '请输入非负整数，或留空表示使用系统默认值', en: 'Enter a non-negative integer, or leave empty to use system default' },
+  admin_colUsername:    { zh: '用户名',   en: 'Username' },
+  admin_colEmail:       { zh: '邮箱',     en: 'Email' },
+  admin_colLang:        { zh: '语言',     en: 'Lang' },
+  admin_colId:          { zh: 'ID',       en: 'ID' },
+  admin_colUsedToday:   { zh: '今日已生成', en: 'Used Today' },
+  admin_colEffLimit:    { zh: '有效上限',  en: 'Eff. Limit' },
+  admin_colCustomLimit: { zh: '自定义上限', en: 'Custom Limit' },
+  admin_colAction:      { zh: '操作',     en: 'Action' },
+  admin_defaultQuota:   { zh: '（默认）',  en: '(default)' },
+  admin_setQuota:       { zh: '设置额度',  en: 'Set Quota' },
+  admin_save:           { zh: '保存',     en: 'Save' },
+  admin_cancel:         { zh: '取消',     en: 'Cancel' },
+
+  // stats page
+  stats_title:      { zh: '最近7天统计', en: 'Last 7 Days Stats' },
+  stats_date:       { zh: '日期',       en: 'Date' },
+  stats_newUsers:   { zh: '新用户',     en: 'New Users' },
+  stats_reads:      { zh: '章节阅读数', en: 'Chapter Reads' },
+
   // common
-  common_loading: { zh: '加载中...', en: 'Loading...' },
-  common_error:   { zh: '出错了',    en: 'Error occurred' },
+  common_loading:         { zh: '加载中...',        en: 'Loading...' },
+  common_error:           { zh: '出错了',            en: 'Error occurred' },
+  common_noDescription:   { zh: '暂无简介',          en: 'Description not set' },
+  common_titleGenerating: { zh: '标题生成中...',     en: 'Title Generating...' },
+  common_descGenerating:  { zh: '简介生成中...',     en: 'Generating...' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

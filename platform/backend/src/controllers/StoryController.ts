@@ -2,8 +2,24 @@ import { Request, Response } from 'express';
 import { StoryService } from '../services/StoryService';
 import { AuthService } from '../services/AuthService';
 import { isAdmin } from '../utils/isAdmin';
+import { StoryModel } from '../models/StoryModel';
+import { StreamGameService } from '../services/StreamGameService';
+import { logger } from '../logger';
 
 const creatingSet = new Set<string>();
+// Tracks story IDs currently having meta regenerated (prevents duplicate work)
+const metaRegenSet = new Set<string>();
+
+async function refreshMissingMeta(): Promise<void> {
+  const stories = await StoryModel.getPublicStoriesNeedingMeta();
+  for (const s of stories) {
+    if (metaRegenSet.has(s.id)) continue;
+    metaRegenSet.add(s.id);
+    StreamGameService.generateAndUpdateMeta(s.id, s.title_zh, s.background_zh || '', s.ai_model || 'deepseek-v3-2-251201')
+      .catch(err => logger.error(`[meta regen] failed for ${s.id}: ${err.message}`))
+      .finally(() => metaRegenSet.delete(s.id));
+  }
+}
 
 export class StoryController {
   static async create(req: Request, res: Response) {
@@ -116,6 +132,8 @@ export class StoryController {
     try {
       const stories = await StoryService.getPublicStories();
       res.json(stories);
+      // Background: fill in missing title_en / summary_en for any story that lacks them
+      refreshMissingMeta().catch(() => {});
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

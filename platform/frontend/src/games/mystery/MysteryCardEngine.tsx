@@ -68,7 +68,7 @@ const FONT_CSS = `
 type CardTone = 'dark' | 'light';
 
 export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
-  const { tf } = useI18n();
+  const { tf, t } = useI18n();
   const data = gameData.cards;
 
   const [index, setIndex] = useState(0);
@@ -173,13 +173,13 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
 
         {/* Back button */}
         {onBack && phase !== 'victory' && (
-          <button onClick={onBack} style={{ ...S.backBtn, color: T.backBtnColor }}>← 返回</button>
+          <button onClick={onBack} style={{ ...S.backBtn, color: T.backBtnColor }}>← {t('game_back')}</button>
         )}
 
         {/* Tone toggle */}
         {phase !== 'victory' && (
           <button onClick={toggleTone} style={{ ...S.backBtn, left: 'auto', right: 52, color: T.backBtnColor, fontSize: '0.75rem' }}>
-            {cardTone === 'dark' ? '☀ 白色调' : '☾ 暗色调'}
+            {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
           </button>
         )}
 
@@ -274,22 +274,22 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
                             <>
                               <div style={{ ...S.storyText, color: T.textMain, marginBottom: 20 }}>{tf(cardData.verdict)}</div>
                               <button onClick={advance} style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }}>
-                                继续
+                                {t('game_continue')}
                               </button>
                             </>
                           );
                         } else {
                           return (
                             <>
-                              <div style={{ ...S.storyText, color: '#ef4444', fontSize: '1.1rem', marginBottom: 12 }}>✗ 判断有误</div>
+                              <div style={{ ...S.storyText, color: '#ef4444', fontSize: '1.1rem', marginBottom: 12 }}>✗ {t('game_wrongJudgment')}</div>
                               <div style={{ ...S.overlayMsg, color: T.textMain, marginBottom: 12 }}>{tf(cardData.penalty)}</div>
                               {cardData.hint && (
                                 <div style={{ ...S.overlayHint, color: T.textSub, border: `1px solid ${T.choiceBorder}`, marginBottom: 16 }}>
-                                  <span style={{ color: T.actColor }}>提示：</span>{tf(cardData.hint)}
+                                  <span style={{ color: T.actColor }}>{t('game_hint')}</span>{tf(cardData.hint)}
                                 </div>
                               )}
                               <button onClick={dismissWrong} style={{ ...S.startBtn, border: `1px solid #ef4444`, color: '#ef4444' }}>
-                                倒退十张，重新审视
+                                {t('game_backTen')}
                               </button>
                             </>
                           );
@@ -309,11 +309,11 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
         {phase === 'wrong' && (
           <div style={S.overlay}>
             <div style={{ ...S.overlayBox, background: T.cardBg, border: `1px solid ${T.cornerColor}` }}>
-              <div style={{ ...S.overlayTitle, color: T.actColor }}>判断有误</div>
+              <div style={{ ...S.overlayTitle, color: T.actColor }}>{t('game_wrongJudgment')}</div>
               <div style={{ ...S.overlayMsg, color: T.textMain }}>{penalty.msg}</div>
               {penalty.hint && (
                 <div style={{ ...S.overlayHint, color: T.textSub, border: `1px solid ${T.choiceBorder}` }}>
-                  <span style={{ color: T.actColor }}>提示：</span>{penalty.hint}
+                  <span style={{ color: T.actColor }}>{t('game_hint')}</span>{penalty.hint}
                 </div>
               )}
               <div style={S.overlayLives}>
@@ -321,7 +321,7 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
                   <span key={i} style={{ color: i < lives ? T.actColor : T.dimColor, fontSize: 20 }}>◆</span>
                 ))}
               </div>
-              <button style={{ ...S.overlayBtn, background: T.btnBg, color: T.btnText }} onClick={dismissWrong}>倒退十张，重新审视</button>
+              <button style={{ ...S.overlayBtn, background: T.btnBg, color: T.btnText }} onClick={dismissWrong}>{t('game_backTen')}</button>
             </div>
           </div>
         )}
@@ -330,18 +330,16 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
         {phase === 'gameover' && (
           <div style={S.overlay}>
             <div style={{ ...S.overlayBox, background: T.cardBg, border: `1px solid ${T.cornerColor}` }}>
-              <div style={{ ...S.overlayTitle, color: '#c0392b' }}>线索断裂</div>
-              <div style={{ ...S.overlayMsg, color: T.textMain }}>
-                三次机会均已耗尽。<br />真凶已经将证据销毁干净。<br />这个案子，需要从头再来。
-              </div>
+              <div style={{ ...S.overlayTitle, color: '#c0392b' }}>{t('game_cluesBroken')}</div>
+              <div style={{ ...S.overlayMsg, color: T.textMain }} dangerouslySetInnerHTML={{ __html: t('game_allChancesLost') }} />
               {penalty.msg && <div style={{ ...S.overlayMsg, color: T.textMain }}><em>{penalty.msg}</em></div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
                 <button style={{ ...S.overlayBtn, background: '#8B1A1A', color: '#F4EAD5' }} onClick={restart}>
-                  重新开始
+                  {t('game_restart')}
                 </button>
                 {onBack && (
                   <button style={{ ...S.overlayBtn, background: 'transparent', border: '1px solid #8B1A1A', color: '#c0392b' }} onClick={onBack}>
-                    返回章节列表
+                    ← {t('game_back')}
                   </button>
                 )}
               </div>
@@ -359,14 +357,14 @@ export function MysteryCardEngine({ gameData, onVictory, onBack }: Props) {
                   {tf(card.verdict || card.text)}
                 </div>
                 <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'mysteryCard_cardGlow 2s infinite' }}>
-                  ✦ 故事完结 ✦
+                  {t('game_storyComplete')}
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                   {onVictory && (
-                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>完成本章</button>
+                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>{t('game_completeChapter')}</button>
                   )}
                   <button style={{ ...S.startBtn, border: `1px solid ${T.dimColor}`, color: T.dimColor }} onClick={restart}>
-                    再玩一次
+                    {t('game_playAgain')}
                   </button>
                 </div>
               </div>

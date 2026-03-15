@@ -76,6 +76,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   const [phase, setPhase] = useState<'playing' | 'wrong' | 'gameover' | 'victory'>('playing');
   const [penalty, setPenalty] = useState({ msg: '', hint: '' });
   const [cardKey, setCardKey] = useState(0);
+  const [pendingAdvance, setPendingAdvance] = useState(false); // 正确答案已选但下一张卡未到
   const [cardTone, setCardTone] = useState<CardTone>(
     () => (localStorage.getItem('card_tone') as CardTone) || 'dark'
   );
@@ -94,7 +95,22 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   const nextRot = getRot(index + 1);
 
   // Derived: should we show the waiting hint?
-  const showWaiting = isWaiting && index === data.length - 1 && card?.type !== 'victory' && card?.type !== 'verdict';
+  const showWaiting = (isWaiting || pendingAdvance) && index === data.length - 1 && card?.type !== 'victory' && card?.type !== 'verdict';
+
+  // 正确答案已选，等新卡到来后自动前进
+  useEffect(() => {
+    if (pendingAdvance && data.length > index + 1) {
+      setPendingAdvance(false);
+      setIndex(index + 1);
+    }
+  }, [pendingAdvance, data.length, index]);
+
+  // 防止 SSE 重连导致 cards 重置后 index 越界 → 空白屏
+  useEffect(() => {
+    if (data.length > 0 && index >= data.length) {
+      setIndex(data.length - 1);
+    }
+  }, [data.length, index]);
 
   useEffect(() => {
     if (card?.type === 'victory' || card?.type === 'verdict') {
@@ -114,20 +130,29 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = useCallback(() => {
-    setIndex(i => Math.min(i + 1, data.length - 1));
-  }, [data.length]);
+    if (index >= data.length - 1) {
+      setPendingAdvance(true);
+      return;
+    }
+    setIndex(i => i + 1);
+  }, [data.length, index]);
 
   const choose = useCallback((opt: 'A' | 'B') => {
     if (phase !== 'playing' || !card || card.type !== 'choice' || !shuffledAB) return;
     if (opt === shuffledAB.correct) {
-      advance();
+      if (index >= data.length - 1) {
+        // 下一张卡还没到，先标记等待
+        setPendingAdvance(true);
+      } else {
+        advance();
+      }
     } else {
       const nl = lives - 1;
       setLives(nl);
-      setPenalty({ msg: tf(card.penalty) || '判断有误', hint: tf(card.hint) || '' });
+      setPenalty({ msg: tf(card.penalty) || t('game_wrongJudgment'), hint: tf(card.hint) || '' });
       setPhase(nl <= 0 ? 'gameover' : 'wrong');
     }
-  }, [phase, card, shuffledAB, lives, advance, tf]);
+  }, [phase, card, shuffledAB, lives, advance, tf, index, data.length]);
 
   const dismissWrong = useCallback(() => {
     setPhase('playing');
@@ -143,7 +168,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
     setCardKey(k => k + 1);
   }, []);
 
-  if (!card) return null;
+  if (!card) return <div style={{ minHeight: '100vh', background: '#0A0A0F' }} />;
 
   return (
     <>
@@ -211,16 +236,22 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
                 <>
                   <div style={{ ...S.choiceIcon, color: T.actColor }}> ？</div>
                   <div style={{ ...S.choiceQuestion, color: T.textMain }}>{tf(card.text)}</div>
-                  <div style={S.choiceRow}>
-                    {(['A', 'B'] as const).map(opt => (
-                      <button key={opt} style={{ ...S.choiceBtn, border: `1px solid ${T.choiceBorder}`, color: T.textMain }} onClick={() => choose(opt)}>
-                        <span style={{ ...S.choiceLetter, color: T.actColor }}>{opt}</span>
-                        <span style={S.choiceText}>
-                          {tf(opt === 'A' ? shuffledAB.optA : shuffledAB.optB)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                  {pendingAdvance ? (
+                    <div style={{ ...S.tapHint, color: T.actColor, animation: 'waitPulse 1.4s ease infinite', marginTop: 16 }}>
+                      {t('game_generatingNext')}
+                    </div>
+                  ) : (
+                    <div style={S.choiceRow}>
+                      {(['A', 'B'] as const).map(opt => (
+                        <button key={opt} style={{ ...S.choiceBtn, border: `1px solid ${T.choiceBorder}`, color: T.textMain }} onClick={() => choose(opt)}>
+                          <span style={{ ...S.choiceLetter, color: T.actColor }}>{opt}</span>
+                          <span style={S.choiceText}>
+                            {tf(opt === 'A' ? shuffledAB.optA : shuffledAB.optB)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -274,16 +305,11 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
                   {tf(card.verdict || card.text)}
                 </div>
                 <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>
-                  {t('game_storyComplete')}
+                  {t('game_chapterComplete')}
                 </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                  {onVictory && (
-                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>{t('game_nextChapter')}</button>
-                  )}
-                  <button style={{ ...S.startBtn, border: `1px solid ${T.dimColor}`, color: T.dimColor }} onClick={restart}>
-                    {t('game_playAgain')}
-                  </button>
-                </div>
+                {onVictory && (
+                  <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor, marginTop: 8 }} onClick={onVictory}>{t('game_nextChapter')}</button>
+                )}
               </div>
               <div style={{ ...S.cardCornerTL, borderColor: T.cornerColor }} />
               <div style={{ ...S.cardCornerBR, borderColor: T.cornerColor }} />
