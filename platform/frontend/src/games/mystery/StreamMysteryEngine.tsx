@@ -68,7 +68,7 @@ const FONT_CSS = `
 type CardTone = 'dark' | 'light';
 
 export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, onBack }: Props) {
-  const { tf } = useI18n();
+  const { t, tf } = useI18n();
   const data = gameData.cards;
 
   const [index, setIndex] = useState(0);
@@ -153,12 +153,12 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
         <div style={{ ...S.bgVignette, background: T.bgVignette }} />
 
         {onBack && phase !== 'victory' && (
-          <button onClick={onBack} style={{ ...S.backBtn, color: T.backBtnColor }}>← 返回</button>
+          <button onClick={onBack} style={{ ...S.backBtn, color: T.backBtnColor }}>← {t('game_back')}</button>
         )}
 
         {phase !== 'victory' && (
           <button onClick={toggleTone} style={{ ...S.backBtn, left: 'auto', right: 52, color: T.backBtnColor, fontSize: '0.75rem' }}>
-            {cardTone === 'dark' ? '☀ 白色调' : '☾ 暗色调'}
+            {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
           </button>
         )}
 
@@ -174,7 +174,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
         {/* Waiting badge */}
         {showWaiting && (
           <div style={S.waitBadge}>
-            <span style={{ animation: 'waitPulse 1.4s ease infinite' }}>⧗</span> 正在生成下一幕…
+            <span style={{ animation: 'waitPulse 1.4s ease infinite' }}>⧗</span> {t('game_generatingNext').replace('⧗ ', '')}
           </div>
         )}
 
@@ -188,7 +188,6 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
               ['--card-r' as string]: `${rot}deg`,
               background: phase === 'wrong' ? T.cardWrongBg : T.cardBg,
               boxShadow: T.cardShadow,
-              cursor: card.type === 'story' ? 'pointer' : 'default',
             }}
             onClick={card.type === 'story' ? advance : undefined}
           >
@@ -203,7 +202,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
                     color: showWaiting ? T.actColor : T.tapHintColor,
                     animation: showWaiting ? 'waitPulse 1.4s ease infinite' : undefined,
                   }}>
-                    {showWaiting ? '— 正在生成下一幕 —' : '— 轻触继续 —'}
+                    {showWaiting ? t('game_generating') : t('game_tapToContinue')}
                   </div>
                 </>
               )}
@@ -233,11 +232,11 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
         {phase === 'wrong' && (
           <div style={S.overlay}>
             <div style={{ ...S.overlayBox, background: T.cardBg, border: `1px solid ${T.cornerColor}` }}>
-              <div style={{ ...S.overlayTitle, color: T.actColor }}>判断有误</div>
+              <div style={{ ...S.overlayTitle, color: T.actColor }}>{t('game_wrongJudgment')}</div>
               <div style={{ ...S.overlayMsg, color: T.textMain }}>{penalty.msg}</div>
               {penalty.hint && (
                 <div style={{ ...S.overlayHint, color: T.textSub, border: `1px solid ${T.choiceBorder}` }}>
-                  <span style={{ color: T.actColor }}>提示：</span>{penalty.hint}
+                  <span style={{ color: T.actColor }}>{t('game_hint')}</span>{penalty.hint}
                 </div>
               )}
               <div style={S.overlayLives}>
@@ -245,7 +244,7 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
                   <span key={i} style={{ color: i < lives ? T.actColor : T.dimColor, fontSize: 20 }}>◆</span>
                 ))}
               </div>
-              <button style={{ ...S.overlayBtn, background: T.btnBg, color: T.btnText }} onClick={dismissWrong}>倒退十张，重新审视</button>
+              <button style={{ ...S.overlayBtn, background: T.btnBg, color: T.btnText }} onClick={dismissWrong}>{t('game_backTen')}</button>
             </div>
           </div>
         )}
@@ -253,15 +252,13 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
         {phase === 'gameover' && (
           <div style={S.overlay}>
             <div style={{ ...S.overlayBox, background: T.cardBg, border: `1px solid ${T.cornerColor}` }}>
-              <div style={{ ...S.overlayTitle, color: '#c0392b' }}>线索断裂</div>
-              <div style={{ ...S.overlayMsg, color: T.textMain }}>
-                三次机会均已耗尽。<br />真凶已经将证据销毁干净。<br />这个案子，需要从头再来。
-              </div>
+              <div style={{ ...S.overlayTitle, color: '#c0392b' }}>{t('game_cluesBroken')}</div>
+              <div style={{ ...S.overlayMsg, color: T.textMain }} dangerouslySetInnerHTML={{ __html: t('game_allChancesLost') }} />
               {penalty.msg && <div style={{ ...S.overlayMsg, color: T.textMain }}><em>{penalty.msg}</em></div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-                <button style={{ ...S.overlayBtn, background: '#8B1A1A', color: '#F4EAD5' }} onClick={restart}>重新开始</button>
+                <button style={{ ...S.overlayBtn, background: '#8B1A1A', color: '#F4EAD5' }} onClick={restart}>{t('game_restart')}</button>
                 {onBack && (
-                  <button style={{ ...S.overlayBtn, background: 'transparent', border: '1px solid #8B1A1A', color: '#c0392b' }} onClick={onBack}>返回</button>
+                  <button style={{ ...S.overlayBtn, background: 'transparent', border: '1px solid #8B1A1A', color: '#c0392b' }} onClick={onBack}>{t('game_back')}</button>
                 )}
               </div>
             </div>
@@ -277,14 +274,14 @@ export function StreamMysteryEngine({ gameData, isWaiting = false, onVictory, on
                   {tf(card.verdict || card.text)}
                 </div>
                 <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>
-                  ✦ 故事完结 ✦
+                  {t('game_storyComplete')}
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                   {onVictory && (
-                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>下一章</button>
+                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>{t('game_nextChapter')}</button>
                   )}
                   <button style={{ ...S.startBtn, border: `1px solid ${T.dimColor}`, color: T.dimColor }} onClick={restart}>
-                    再玩一次
+                    {t('game_playAgain')}
                   </button>
                 </div>
               </div>
@@ -341,7 +338,7 @@ const S: Record<string, React.CSSProperties> = {
   choiceIcon: { fontSize: '1.8rem', marginBottom: 12, opacity: 0.6 },
   choiceQuestion: { fontSize: '0.95rem', lineHeight: 1.8, textAlign: 'center', marginBottom: 20, letterSpacing: '0.05em' },
   choiceRow: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%' },
-  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', width: '100%', outline: 'none' },
+  choiceBtn: { display: 'flex', alignItems: 'flex-start', gap: 10, background: 'transparent', borderRadius: 3, padding: '10px 12px', textAlign: 'left', fontFamily: 'inherit', width: '100%', outline: 'none', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' },
   choiceLetter: { fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: '1rem', minWidth: 18, marginTop: 1 },
   choiceText: { fontSize: '0.88rem', lineHeight: 1.6, letterSpacing: '0.04em' },
   startBtn: { padding: '10px 24px', background: 'transparent', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 2, transition: 'all .2s' },

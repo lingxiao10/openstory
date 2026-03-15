@@ -50,6 +50,7 @@ interface Props {
   gameData: GameData;
   isWaiting?: boolean;
   onVictory?: () => void;
+  onBack?: () => void;
 }
 
 const STAT_INIT = 7;
@@ -93,7 +94,7 @@ const FONT_CSS = `
 
 type CardTone = 'dark' | 'light';
 
-export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: Props) {
+export function StreamNumericEngine({ gameData, isWaiting = false, onVictory, onBack }: Props) {
   const { t, tf } = useI18n();
   const [stats, setStats] = useState<Record<string, number>>(() => getInitialStats(gameData.statDefs || {}));
   const [items, setItems] = useState<string[]>([]);
@@ -102,6 +103,7 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: 
   const [lastEffects, setLastEffects] = useState<Record<string, number>>({});
   const [lastItem, setLastItem] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [gameOverReason, setGameOverReason] = useState<{ statKey: string; statName: string } | null>(null);
   const [win, setWin] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [changedStats, setChangedStats] = useState<Set<string>>(new Set());
@@ -172,7 +174,14 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: 
     setTimeout(() => setChangedStats(new Set()), 600);
 
     const isDead = Object.entries(newStats).some(([k, v]) => gameData.statDefs[k] && v <= 0);
-    if (isDead) { setGameOver(true); return; }
+    if (isDead) {
+      const deadStat = Object.entries(newStats).find(([k, v]) => gameData.statDefs[k] && v <= 0);
+      if (deadStat) {
+        setGameOverReason({ statKey: deadStat[0], statName: tf(gameData.statDefs[deadStat[0]].name) });
+      }
+      setGameOver(true);
+      return;
+    }
 
     const nextIndex = index + 1;
     if (data[nextIndex]?.type === 'end') { setWin(true); return; }
@@ -205,15 +214,16 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: 
     setIndex(0);
     setCardKey(k => k + 1);
     setGameOver(false);
+    setGameOverReason(null);
     setWin(false);
     setWaiting(false);
   };
 
-  if (!card) return <div style={{ color: '#fff', textAlign: 'center', padding: 40 }}>加载中…</div>;
+  if (!card) return <div style={{ color: '#fff', textAlign: 'center', padding: 40 }}>{t('common_loading')}</div>;
 
   const tapHintText = waiting
-    ? '⧗ 正在生成下一幕…'
-    : (isWaiting && index === data.length - 1 ? '⧗ 正在生成下一幕…' : '— 轻触继续 —');
+    ? t('game_generatingNext')
+    : (isWaiting && index === data.length - 1 ? t('game_generatingNext') : t('game_tapToContinue'));
 
   return (
     <>
@@ -225,15 +235,20 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: 
         {/* Tone toggle */}
         {!gameOver && !win && (
           <button onClick={toggleTone} style={{ ...S.backBtn, left: 'auto', right: 16, color: T.backBtnColor, fontSize: '0.75rem' }}>
-            {cardTone === 'dark' ? '☀ 白色调' : '☾ 暗色调'}
+            {cardTone === 'dark' ? t('game_lightMode') : t('game_darkMode')}
           </button>
+        )}
+
+        {/* Back button */}
+        {onBack && !gameOver && !win && (
+          <button onClick={onBack} style={{ ...S.backBtn, color: T.backBtnColor }}>← {t('game_back')}</button>
         )}
 
         {/* Waiting full-screen overlay */}
         {waiting && (
           <div style={{ ...S.overlay, background: '#00000088', zIndex: 50 }}>
             <div style={{ color: T.actColor, fontSize: '1rem', animation: 'waitPulse 1.4s ease infinite', letterSpacing: '0.1em' }}>
-              ⧗ 正在生成下一段…
+              {t('game_generatingSegment')}
             </div>
           </div>
         )}
@@ -319,6 +334,16 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: 
               <div style={{ ...S.cardInner, border: `1px solid ${T.cardBorder}`, gap: 12 }}>
                 <div style={{ fontSize: 40 }}>💀</div>
                 <div style={{ ...S.actLabel, color: '#c0392b', fontSize: '1rem', letterSpacing: '0.15em' }}>{t('game_over')}</div>
+                {gameOverReason && (
+                  <div style={{ color: T.textMain, fontSize: '0.9rem', lineHeight: 1.8, textAlign: 'center' }}>
+                    {gameOverReason.statName} {t('game_statZero')}
+                  </div>
+                )}
+                {card?.text && (
+                  <div style={{ color: T.textSub, fontSize: '0.85rem', lineHeight: 1.7, textAlign: 'center', marginTop: 8 }}>
+                    {tf(card.text)}
+                  </div>
+                )}
                 <button onClick={restart} style={{ ...S.startBtn, border: '1px solid #c0392b', color: '#c0392b', marginTop: 8 }}>{t('game_tryAgain')}</button>
               </div>
               <div style={{ ...S.cardCornerTL, borderColor: T.cornerColor }} />
@@ -335,12 +360,12 @@ export function StreamNumericEngine({ gameData, isWaiting = false, onVictory }: 
                 <div style={{ ...S.storyText, color: T.textMain, whiteSpace: 'pre-line', lineHeight: 2 }}>
                   {gameData.winText ? tf(gameData.winText) : t('game_win')}
                 </div>
-                <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>✦ 故事完结 ✦</div>
+                <div style={{ color: T.actColor, fontSize: '1.3rem', margin: '20px 0 8px', animation: 'cardGlow 2s infinite' }}>{t('game_storyComplete')}</div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {onVictory && (
-                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>下一章</button>
+                    <button style={{ ...S.startBtn, border: `1px solid ${T.actColor}`, color: T.actColor }} onClick={onVictory}>{t('game_nextChapter')}</button>
                   )}
-                  <button style={{ ...S.startBtn, border: `1px solid ${T.dimColor}`, color: T.dimColor }} onClick={restart}>再玩一次</button>
+                  <button style={{ ...S.startBtn, border: `1px solid ${T.dimColor}`, color: T.dimColor }} onClick={restart}>{t('game_playAgain')}</button>
                 </div>
               </div>
               <div style={{ ...S.cardCornerTL, borderColor: T.cornerColor }} />

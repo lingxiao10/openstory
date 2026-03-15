@@ -25,6 +25,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../store/authStore';
 import { StreamMysteryEngine } from '../games/mystery/StreamMysteryEngine';
 import { StreamNumericEngine } from '../games/numeric/StreamNumericEngine';
+import { useI18n } from '../i18n';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export function StreamGamePage() {
   const { storyId } = useParams<{ storyId: string }>();
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
+  const { t } = useI18n();
 
   const [phase, setPhase] = useState<PagePhase>('connecting');
   const [chapters, setChapters] = useState<ChapterState[]>([]);
@@ -82,16 +84,16 @@ export function StreamGamePage() {
 
       if (!resumeRes.ok) {
         const err = await resumeRes.json();
-        throw new Error(err.error || '创建会话失败');
+        throw new Error(err.error || t('stream_sessionFailed'));
       }
 
       return true;
     } catch (err: any) {
-      setFatalError(err.message || '初始化失败');
+      setFatalError(err.message || t('stream_initFailed'));
       setPhase('fatal_error');
       return false;
     }
-  }, [storyId, token]);
+  }, [storyId, token, t]);
 
   // ── SSE connection ───────────────────────────────────────────────────────────
 
@@ -159,9 +161,9 @@ export function StreamGamePage() {
     sse.addEventListener('error', (e: any) => {
       try {
         const data = JSON.parse(e.data ?? '{}');
-        setFatalError(data.message || '生成出错');
+        setFatalError(data.message || t('stream_generationError'));
       } catch {
-        setFatalError('连接中断');
+        setFatalError(t('stream_connectionLost'));
       }
       setPhase('fatal_error');
       setIsGenerating(false);
@@ -222,7 +224,7 @@ export function StreamGamePage() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   if (phase === 'connecting') {
-    return <LoadingScreen message="正在连接，生成故事大纲中…" onBack={() => navigate('/my-stories')} />;
+    return <LoadingScreen message={t('stream_connecting')} onBack={() => navigate('/my-stories')} />;
   }
 
   if (phase === 'fatal_error') {
@@ -245,14 +247,14 @@ export function StreamGamePage() {
   }
 
   if (!currentChapter) {
-    return <LoadingScreen message="加载章节中…" onBack={() => navigate('/my-stories')} />;
+    return <LoadingScreen message={t('stream_loadingChapter')} onBack={() => navigate('/my-stories')} />;
   }
 
   // Show chapter error
   if (currentChapter.hasError) {
     return (
       <ErrorScreen
-        message={`第 ${currentChapter.num} 章生成失败：${currentChapter.errorMsg}`}
+        message={t('stream_chapterFailed').replace('{n}', String(currentChapter.num)) + currentChapter.errorMsg}
         onBack={() => navigate('/my-stories')}
         onRetry={() => handleRetry(currentChapter.num)}
       />
@@ -263,7 +265,7 @@ export function StreamGamePage() {
   if (currentChapter.cards.length === 0) {
     return (
       <LoadingScreen
-        message={`第 ${currentChapter.num} 章生成中…`}
+        message={t('stream_chapterGenerating').replace('{n}', String(currentChapter.num))}
         subMessage={currentChapter.outlineZh}
         onBack={() => navigate('/my-stories')}
       />
@@ -273,7 +275,7 @@ export function StreamGamePage() {
   // Playing
   if (genre === 'numeric') {
     const numericGameData = {
-      title: currentChapter.numericMeta?.title ?? { zh: `第 ${currentChapter.num} 章`, en: `Chapter ${currentChapter.num}` },
+      title: currentChapter.numericMeta?.title ?? { zh: t('stream_chapterTitle').replace('{n}', String(currentChapter.num)), en: `Chapter ${currentChapter.num}` },
       description: currentChapter.numericMeta?.description ?? { zh: '', en: '' },
       statDefs: currentChapter.numericMeta?.statDefs ?? {},
       itemDefs: currentChapter.numericMeta?.itemDefs ?? {},
@@ -282,13 +284,14 @@ export function StreamGamePage() {
     };
     // Wait for meta before rendering (statDefs needed)
     if (!currentChapter.numericMeta) {
-      return <LoadingScreen message="加载章节数据…" onBack={() => navigate('/my-stories')} />;
+      return <LoadingScreen message={t('stream_loadingData')} onBack={() => navigate('/my-stories')} />;
     }
     return (
       <StreamNumericEngine
         gameData={numericGameData}
         isWaiting={isWaiting}
         onVictory={handleVictory}
+        onBack={() => navigate('/my-stories')}
       />
     );
   }
@@ -307,6 +310,7 @@ export function StreamGamePage() {
 // ─── Sub-screens ───────────────────────────────────────────────────────────────
 
 function LoadingScreen({ message, subMessage, onBack }: { message: string; subMessage?: string; onBack: () => void }) {
+  const { t } = useI18n();
   return (
     <div style={SS.root}>
       <div style={SS.spinner} />
@@ -314,35 +318,37 @@ function LoadingScreen({ message, subMessage, onBack }: { message: string; subMe
       {subMessage && (
         <div style={SS.sub}>{subMessage.slice(0, 80)}{subMessage.length > 80 ? '…' : ''}</div>
       )}
-      <button onClick={onBack} style={SS.backBtn}>← 返回</button>
+      <button onClick={onBack} style={SS.backBtn}>← {t('game_back')}</button>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
 
 function ErrorScreen({ message, onBack, onRetry }: { message: string; onBack: () => void; onRetry?: () => void }) {
+  const { t } = useI18n();
   return (
     <div style={SS.root}>
-      <div style={{ ...SS.msg, color: '#ef4444' }}>出错了</div>
+      <div style={{ ...SS.msg, color: '#ef4444' }}>{t('common_error')}</div>
       <div style={SS.sub}>{message}</div>
       <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
         {onRetry && (
           <button onClick={onRetry} style={{ ...SS.backBtn, background: '#ef444422', borderColor: '#ef444466', color: '#ef4444' }}>
-            重试
+            {t('stream_retry')}
           </button>
         )}
-        <button onClick={onBack} style={SS.backBtn}>← 返回</button>
+        <button onClick={onBack} style={SS.backBtn}>← {t('game_back')}</button>
       </div>
     </div>
   );
 }
 
 function ChapterTransitionScreen({ chapterNum, outlineZh }: { chapterNum: number; outlineZh: string }) {
+  const { t } = useI18n();
   return (
     <div style={{ ...SS.root, background: '#050810' }}>
-      <div style={{ color: '#C9A84C55', fontSize: '0.65rem', letterSpacing: '0.3em', marginBottom: 16 }}>CHAPTER</div>
+      <div style={{ color: '#C9A84C55', fontSize: '0.65rem', letterSpacing: '0.3em', marginBottom: 16 }}>{t('stream_chapterLabel')}</div>
       <div style={{ color: '#C9A84C', fontSize: '2rem', fontFamily: 'Georgia, serif', marginBottom: 20 }}>
-        第 {chapterNum} 章
+        {t('stream_chapterTitle').replace('{n}', String(chapterNum))}
       </div>
       {outlineZh && (
         <div style={{ color: '#E8D5B060', fontSize: '0.85rem', lineHeight: 1.8, maxWidth: 300, textAlign: 'center' }}>
@@ -355,11 +361,12 @@ function ChapterTransitionScreen({ chapterNum, outlineZh }: { chapterNum: number
 }
 
 function AllDoneScreen({ onBack }: { onBack: () => void }) {
+  const { t } = useI18n();
   return (
     <div style={SS.root}>
-      <div style={{ color: '#C9A84C', fontSize: '1.8rem', fontFamily: 'Georgia, serif', marginBottom: 12 }}>✦ 故事完结 ✦</div>
-      <div style={SS.sub}>所有章节已通关，感谢你的游玩。</div>
-      <button onClick={onBack} style={{ ...SS.backBtn, marginTop: 24 }}>← 返回我的故事</button>
+      <div style={{ color: '#C9A84C', fontSize: '1.8rem', fontFamily: 'Georgia, serif', marginBottom: 12 }}>{t('game_storyComplete')}</div>
+      <div style={SS.sub}>{t('stream_allComplete')}</div>
+      <button onClick={onBack} style={{ ...SS.backBtn, marginTop: 24 }}>{t('stream_backToStories')}</button>
     </div>
   );
 }

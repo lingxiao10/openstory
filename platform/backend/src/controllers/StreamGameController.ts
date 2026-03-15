@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { StreamGameService, StreamCreateOptions } from '../services/StreamGameService';
 import { StoryModel } from '../models/StoryModel';
 import { logger } from '../logger';
+import { AuthService } from '../services/AuthService';
+import { isAdmin } from '../utils/isAdmin';
 
 const activeStarts = new Set<string>(); // userId deduplicate
 
@@ -25,6 +27,15 @@ export class StreamGameController {
       if (!['mystery', 'numeric'].includes(genre)) {
         return res.status(400).json({ error: '无效的 genre' });
       }
+
+      const model = aiModel || 'deepseek-v3-2-251201';
+      if (model.startsWith('google/gemini')) {
+        const user = await AuthService.getUserById(userId);
+        if (!user || !isAdmin(user.email, user.username)) {
+          return res.status(403).json({ error: 'Only admins can use Gemini models / 只有管理员可以使用 Gemini 模型' });
+        }
+      }
+
       const count = Math.min(Math.max(parseInt(chapterCount) || 1, 1), 5);
 
       const opts: StreamCreateOptions = {
@@ -34,7 +45,7 @@ export class StreamGameController {
         genre,
         chapterCount: count,
         playerName: playerName?.trim() || '',
-        aiModel: aiModel || 'deepseek-v3-2-251201',
+        aiModel: model,
       };
 
       const storyId = await StreamGameService.startSession(opts);

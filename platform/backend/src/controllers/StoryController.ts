@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { StoryService } from '../services/StoryService';
+import { AuthService } from '../services/AuthService';
+import { isAdmin } from '../utils/isAdmin';
 
 const creatingSet = new Set<string>();
 
@@ -13,8 +15,17 @@ export class StoryController {
     try {
       const { title, genre, background, chapterCount, progressKey, playerName, aiModel } = req.body;
       if (!title || !genre) return res.status(400).json({ error: 'Missing required fields' });
+
+      const model = aiModel || 'deepseek-v3-2-251201';
+      if (model.startsWith('google/gemini')) {
+        const user = await AuthService.getUserById(userId);
+        if (!user || !isAdmin(user.email, user.username)) {
+          return res.status(403).json({ error: 'Only admins can use Gemini models / 只有管理员可以使用 Gemini 模型' });
+        }
+      }
+
       const count = typeof chapterCount === 'number' ? chapterCount : 0;
-      const id = await StoryService.createStory(userId, title, genre, background || '', count, progressKey || undefined, playerName || '', aiModel || 'deepseek-v3-2-251201');
+      const id = await StoryService.createStory(userId, title, genre, background || '', count, progressKey || undefined, playerName || '', model);
       res.status(201).json({ id });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
